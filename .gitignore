@@ -1,0 +1,18 @@
+# secrets: API key nằm trong .env (nên để ở $BACKLOG_BRIDGE_HOME, ngoài repo)
+.env*
+!.env.example
+
+node_modules/
+dist/
+
+# dữ liệu chạy (nên để ở $BACKLOG_BRIDGE_HOME/state)
+state/
+config.json
+
+# editor / agent local
+.idea/
+.vscode/
+.codex/
+.claude/worktrees/
+.claude/settings.local.json
+.DS_Store

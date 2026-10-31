@@ -1,0 +1,8 @@
+---
+description: Work with Backlog (read/write many spaces, sync) via node src/bl.ts and node src/sync.ts
+alwaysApply: true
+---
+
+Read `AGENTS.md` at the repo root. Before touching Backlog, read the matching skill in
+`.agents/skills/<name>/SKILL.md` (backlog-connect, backlog-query, backlog-write, backlog-sync) and follow it.
+Only add `--yes` to a write after the user approved the preview; always ask again before writing to a customer's Backlog.

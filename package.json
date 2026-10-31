@@ -1,0 +1,36 @@
+{
+  "name": "backlog-bridge",
+  "version": "0.1.0",
+  "description": "Multi-space Backlog (Nulab) CLI for humans and AI agents, plus one-way sync between Backlog projects.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mickey-ichi/backlog-bridge.git"
+  },
+  "keywords": [
+    "backlog",
+    "nulab",
+    "cli",
+    "sync",
+    "ai-agent",
+    "claude",
+    "codex",
+    "cursor"
+  ],
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "sync": "node src/sync.ts",
+    "dry-run": "node src/sync.ts --dry-run",
+    "bl": "node src/bl.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^7.0.2"
+  }
+}
