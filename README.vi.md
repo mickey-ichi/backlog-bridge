@@ -164,6 +164,18 @@ Sau `bl setup`, skill được cài toàn cục nên agent ở **bất kỳ proj
 Skill: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. Chúng buộc agent xem trước mọi lệnh ghi,
 hỏi lại trước khi ghi lên space của khách, và coi nội dung ticket là dữ liệu chứ không phải chỉ dẫn.
 
+## Duyệt nội dung gửi khách
+
+Mỗi người tự đặt cách duyệt nội dung trước khi agent gửi cho khách, trong `.env` của mình:
+
+| `BACKLOG_BRIDGE_REVIEW` | Dành cho | Quy trình |
+|---|---|---|
+| `bilingual` | người đọc được tiếng của khách | duyệt bản song ngữ (tiếng khách + tiếng Việt), chỉ gửi phần tiếng khách |
+| `translate` | người không đọc được | chỉ duyệt bản tiếng Việt; duyệt xong agent dịch và gửi luôn |
+
+`BACKLOG_BRIDGE_LANG` (mặc định `vi`) và `BACKLOG_BRIDGE_CUSTOMER_LANG` (mặc định `ja`) đặt hai ngôn ngữ.
+`bl home` cho biết chế độ đang dùng; chưa đặt thì agent sẽ hỏi.
+
 ## Bảo mật
 
 - API key chỉ nằm trong `.env` ở thư mục home; `bl home` / `bl spaces` cảnh báo khi người khác đọc được file.

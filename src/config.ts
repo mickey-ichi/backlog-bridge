@@ -19,6 +19,29 @@ export function setting(name: "HOME" | "CONFIG" | "PROFILE"): string | undefined
   return process.env[`BACKLOG_BRIDGE_${name}`] || process.env[`BACKLOG_SYNC_${name}`];
 }
 
+// Cách duyệt nội dung trước khi gửi khách — theo từng người, nên đặt trong .env của mình:
+//   BACKLOG_BRIDGE_REVIEW=bilingual  đọc được tiếng của khách: duyệt bản song ngữ, chỉ gửi bản tiếng khách
+//   BACKLOG_BRIDGE_REVIEW=translate  không đọc được: chỉ duyệt bản tiếng mình, agent dịch rồi gửi luôn
+//   BACKLOG_BRIDGE_LANG (mặc định vi), BACKLOG_BRIDGE_CUSTOMER_LANG (mặc định ja)
+export type ReviewMode = "bilingual" | "translate";
+export interface ReviewPrefs {
+  mode?: ReviewMode;
+  invalid?: string;
+  lang: string;
+  customerLang: string;
+}
+
+export function reviewPrefs(): ReviewPrefs {
+  const raw = process.env.BACKLOG_BRIDGE_REVIEW?.trim().toLowerCase();
+  const valid = raw === "bilingual" || raw === "translate";
+  return {
+    mode: valid ? raw : undefined,
+    invalid: raw && !valid ? raw : undefined,
+    lang: process.env.BACKLOG_BRIDGE_LANG?.trim() || "vi",
+    customerLang: process.env.BACKLOG_BRIDGE_CUSTOMER_LANG?.trim() || "ja",
+  };
+}
+
 export interface SpaceEntry extends Partial<Credentials> {
   env: string;
   from: "config" | "env";
