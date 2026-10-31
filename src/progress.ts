@@ -1,17 +1,17 @@
-// Chế độ "progress": đẩy TIẾN ĐỘ từ project nội bộ sang issue có sẵn ở project khách.
-// KHÔNG BAO GIỜ tạo issue mới ở phía khách.
+// "progress" mode: push PROGRESS from the internal project onto existing issues in the customer project.
+// NEVER creates new issues on the customer side.
 //
-// Hai bên tách task theo trục khác nhau:
-//   - Nội bộ: 1 Epic đánh số [NN] (milestone Phase 1) gồm [FE] [BE] [Infra] [Integrate API] [QA].
-//   - Khách:  WBS "1.2.3" gồm 3 leaf cố định theo segment cuối — .3 実装 / .4 単体テスト / .5 受入確認.
-//             Unit API nằm ở mục 1-2, unit màn hình ở mục 3.
+// The two sides split tasks along different axes:
+//   - Internal: 1 Epic numbered [NN] (milestone Phase 1) containing [FE] [BE] [Infra] [Integrate API] [QA].
+//   - Customer: WBS "1.2.3" with 3 fixed leaves by last segment — .3 実装 / .4 単体テスト / .5 受入確認.
+//             API units are in sections 1-2, screen units in section 3.
 //
-// Rule đã chốt:
-//   [BE]/[Infra]/[Integrate API] -> rollup của unit API   (nhóm "api")
-//   [FE]                         -> rollup của unit màn hình (nhóm "screen")
-//   [QA]                         -> tính vào MỌI nhóm, không ghi lên leaf test của khách
-//   Ghi lên leaf 実装; khi rollup = done thì ghi thêm leaf 受入確認 (Resolved, không Closed).
-//   Leaf 単体テスト không bao giờ bị đụng.
+// Agreed rules:
+//   [BE]/[Infra]/[Integrate API] -> rollup of API units    (group "api")
+//   [FE]                         -> rollup of screen units (group "screen")
+//   [QA]                         -> counted in EVERY group, never written to the customer's test leaf
+//   Write to the 実装 leaf; when rollup = done, also write the 受入確認 leaf (Resolved, not Closed).
+//   The 単体テスト leaf is never touched.
 import { BacklogClient } from "./backlog.ts";
 import { credentials, readJson, writeJson, resolvePath, hasFlag, argValue } from "./config.ts";
 import { normalizeName } from "./mirror.ts";
@@ -55,7 +55,7 @@ interface UnitEntry {
   features: Map<string, FeatureRef>;
 }
 
-// pairFile: "<NN>" | "<issueKey>" -> { <nhóm>: [unit...], note }, cộng hai khoá đặc biệt _outOfScope / _notes.
+// pairFile: "<NN>" | "<issueKey>" -> { <group>: [unit...], note }, plus two special keys _outOfScope / _notes.
 interface PairEntry {
   note?: string;
   [group: string]: string[] | string | undefined;
@@ -92,10 +92,10 @@ const groupUnits = (pair: PairEntry, group: string): string[] => {
 };
 
 const STATE_LABEL: Record<RollupState, string> = {
-  not_started: "chưa bắt đầu",
-  in_progress: "đang làm",
-  pending: "tạm dừng",
-  done: "đã xong",
+  not_started: "not started",
+  in_progress: "in progress",
+  pending: "paused",
+  done: "done",
 };
 const ROLE_BY_SEGMENT: Record<string, LeafRole> = { 3: "impl", 4: "unitTest", 5: "acceptance" };
 
@@ -116,8 +116,8 @@ function collectDescendants(issue: Issue, childrenByParent: Map<number, Issue[]>
   return out;
 }
 
-// Trạng thái + % của một nhóm task, suy ra từ trạng thái từng task.
-// % tính theo estimatedHours (task không có estimate coi như 1 giờ).
+// State + % of a group of tasks, derived from each task's status.
+// % is weighted by estimatedHours (a task without an estimate counts as 1 hour).
 export function rollup(items: Issue[], rules: RollupRules): RollupResult {
   const done = new Set(rules.doneStatuses || []);
   const active = new Set(rules.activeStatuses || []);
@@ -156,14 +156,14 @@ export function rollup(items: Issue[], rules: RollupRules): RollupResult {
   };
 }
 
-// Gom issue phía khách thành unit WBS: "1.2.3" -> { leaves: {impl, unitTest, acceptance} }
+// Group customer-side issues into WBS units: "1.2.3" -> { leaves: {impl, unitTest, acceptance} }
 export function buildUnits(destIssues: Issue[]): Map<string, Unit> {
   const units = new Map<string, Unit>();
   for (const issue of destIssues) {
     const m = issue.summary.match(/^\s*(\d+(?:\.\d+)+)\s*(.*)$/);
     if (!m) continue;
     const segments = m[1].split(".");
-    // 4 tầng = leaf của unit 3 tầng; 3 tầng = checkpoint đứng một mình (mục 4.x).
+    // 4 levels = leaf of a 3-level unit; 3 levels = standalone checkpoint (section 4.x).
     const number = segments.slice(0, 3).join(".");
     const role = segments.length >= 4 ? ROLE_BY_SEGMENT[segments[3]] : "impl";
     if (!units.has(number)) {
@@ -183,15 +183,15 @@ export function buildUnits(destIssues: Issue[]): Map<string, Unit> {
 }
 
 export async function run({ config, profile, profileName }: RunContext<ProgressProfile>): Promise<void> {
-  // Ghi sang Backlog khách là việc lộ ra ngoài -> mặc định chỉ xem trước, phải --live mới ghi.
+  // Writing to the customer's Backlog is externally visible -> preview only by default; --live is required to write.
   const LIVE = hasFlag("live");
   const LIST_UNITS = hasFlag("units");
   const WRITE_COMMENT = hasFlag("comment") || profile.dest.write?.comment === true;
   const WRITE_DATES = argValue("dates") || profile.dest.write?.dates || "none";
   const ALLOW_REGRESS = hasFlag("allow-regress") || profile.dest.write?.allowRegress === true;
   const ONLY = (argValue("only") || "").split(",").map((s) => s.trim()).filter(Boolean);
-  // Focus: chỉ ghi lên leaf mà KHÁCH đang assign cho người này, và báo phần họ giao
-  // mà nội bộ chưa khai cặp. --mine = chính chủ API key đang dùng.
+  // Focus: only write to leaves the CUSTOMER has assigned to this person, and report what they assigned
+  // that is not paired internally. --mine = the owner of the API key in use.
   const FOCUS_ARG = argValue("assignee") || (hasFlag("mine") ? "@me" : profile.dest.focusAssignee);
 
   const src = new BacklogClient(credentials(config, profile.source.space));
@@ -203,16 +203,16 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   if (FOCUS_ARG === "@me") focusName = (await dst.getMyself()).name;
   const focusKey = focusName ? normalizeName(focusName) : null;
   if (focusKey && focusKey.length < 3) {
-    throw new Error(`--assignee="${focusName}" quá ngắn/không hợp lệ sau khi chuẩn hoá ("${focusKey}")`);
+    throw new Error(`--assignee="${focusName}" is too short/invalid after normalization ("${focusKey}")`);
   }
   const matchesFocus = (issue: Issue | undefined) =>
     !focusKey || normalizeName(issue?.assignee?.name).includes(focusKey);
 
   console.log(`Profile: ${profileName} (mode=progress)`);
-  console.log(`Mode: ${LIVE ? "LIVE — GHI VÀO BACKLOG KHÁCH" : "DRY-RUN (không ghi gì)"}`);
-  console.log(`Source (nội bộ): ${src.host} / ${profile.source.projectKey}`);
-  console.log(`Dest (khách):    ${dst.host} / ${profile.dest.projectKey}`);
-  if (focusName) console.log(`Focus: chỉ ghi leaf khách assign cho "${focusName}"`);
+  console.log(`Mode: ${LIVE ? "LIVE — WRITING TO CUSTOMER BACKLOG" : "DRY-RUN (nothing is written)"}`);
+  console.log(`Source (internal): ${src.host} / ${profile.source.projectKey}`);
+  console.log(`Dest (customer):   ${dst.host} / ${profile.dest.projectKey}`);
+  if (focusName) console.log(`Focus: only write leaves the customer assigned to "${focusName}"`);
   console.log(`Last sync: ${state.lastSync || "never"}\n`);
 
   const srcProject = await src.getProject(profile.source.projectKey);
@@ -226,7 +226,7 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   const units = buildUnits(dstIssues);
 
   if (LIST_UNITS) {
-    console.log(`${units.size} unit WBS phía khách (dùng để điền pairFile):\n`);
+    console.log(`${units.size} customer-side WBS units (use these to fill in pairFile):\n`);
     const sorted = [...units.values()].sort((a, b) => cmpWbs(a.number, b.number));
     for (const u of sorted) {
       const leaves = (["impl", "unitTest", "acceptance"] as const)
@@ -237,9 +237,9 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
     return;
   }
 
-  // 1. Tính năng phía nội bộ.
-  // Khoá của một tính năng = số [NN] nếu epic có đánh số, ngược lại = issueKey của epic
-  // (vd một epic hạ tầng không đánh số nhưng vẫn ứng với một unit của khách).
+  // 1. Internal-side features.
+  // A feature's key = the [NN] number if the epic is numbered, otherwise = the epic's issueKey
+  // (e.g. an unnumbered infrastructure epic that still maps to a customer unit).
   const featureCfg: NonNullable<ProgressProfile["source"]["feature"]> = profile.source.feature || {};
   const epicPattern = new RegExp(featureCfg.epicPattern || "^\\s*\\[Epic\\]");
   const numberPattern = new RegExp(featureCfg.numberPattern || featureCfg.summaryPattern || "\\[(\\d+)\\]");
@@ -253,8 +253,8 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   const features = new Map<string, Feature>();
   for (const issue of srcIssues) {
     if (!epicPattern.test(issue.summary)) continue;
-    // Epic cùng số nhưng khác milestone là bản kế hoạch cũ (đã Closed) -> loại,
-    // nếu không tiến độ của tính năng bị tính là đã xong.
+    // An epic with the same number but a different milestone is an old plan (already Closed) -> exclude it,
+    // otherwise the feature's progress would be counted as done.
     if (wantMilestone && !(issue.milestone || []).some((v) => v.name === wantMilestone)) continue;
     const m = issue.summary.match(numberPattern);
     const key = m ? m[1].padStart(2, "0") : issue.issueKey;
@@ -268,20 +268,20 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
     return a.number.localeCompare(b.number, undefined, { numeric: true });
   });
   console.log(
-    `Nội bộ: ${srcIssues.length} issue -> ${featureList.length} epic` +
+    `Internal: ${srcIssues.length} issue -> ${featureList.length} epic` +
     `${wantMilestone ? ` (milestone "${wantMilestone}")` : ""} ` +
-    `(${featureList.filter((f) => f.numbered).length} đánh số, ${featureList.filter((f) => !f.numbered).length} chưa đánh số), ` +
-    `${featureList.reduce((n, f) => n + f.children.length, 0)} task con.`
+    `(${featureList.filter((f) => f.numbered).length} numbered, ${featureList.filter((f) => !f.numbered).length} unnumbered), ` +
+    `${featureList.reduce((n, f) => n + f.children.length, 0)} child tasks.`
   );
-  console.log(`Khách: ${dstIssues.length} issue -> ${units.size} unit WBS.\n`);
+  console.log(`Customer: ${dstIssues.length} issue -> ${units.size} WBS units.\n`);
 
-  // 2. Ghép cặp + rollup theo nhóm.
+  // 2. Pairing + rollup by group.
   const groups: Record<string, string[]> = profile.source.childGroups || {};
   const alwaysCount = new Set(profile.source.alwaysCount || []);
   const rules = profile.source.rollup || {};
   const pairFile = profile.dest.match?.pairFile || `state/pairs-${profileName}.json`;
   const pairs = readJson<Record<string, unknown> | null>(pairFile, null);
-  if (!pairs) throw new Error(`Không đọc được pairFile ${resolvePath(pairFile)} — chạy --units để lấy danh sách unit rồi khai cặp.`);
+  if (!pairs) throw new Error(`Cannot read pairFile ${resolvePath(pairFile)} — run --units to get the unit list, then pair them.`);
 
   const statusByName = new Map(dstStatuses.map((s) => [s.name, s]));
   const statusMap = profile.dest.write?.status || {};
@@ -289,9 +289,9 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   const targetRoles = profile.dest.write?.targets || ["impl"];
   const acceptanceOnlyWhenDone = profile.dest.write?.acceptanceOnlyWhenDone !== false;
 
-  // Gộp theo unit khách: nhiều tính năng nội bộ có thể trỏ cùng 1 unit
-  // (vd 3.2.11 利用状況・分析 nhận cả [45] và [46]) -> phải cộng dồn task rồi mới tính
-  // rollup một lần, nếu ghi lần lượt thì tính năng sau đè tiến độ của tính năng trước.
+  // Aggregate per customer unit: several internal features can point to the same unit
+  // (e.g. 3.2.11 利用状況・分析 receives both [45] and [46]) -> accumulate the tasks first, then compute
+  // the rollup once; writing them one by one would let a later feature overwrite the earlier one's progress.
   const perUnit = new Map<string, UnitEntry>();
   const unmapped: Array<{ f: Feature; epicTitle: string; note?: string }> = [];
   const noWork: Array<{ f: Feature; epicTitle: string; groupName: string; unitNumbers: string[] }> = [];
@@ -309,7 +309,7 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
       const unitNumbers = groupUnits(pair, groupName);
       if (!unitNumbers.length) continue;
       const prefixSet = new Set(prefixes);
-      // [QA] (alwaysCount) tính vào mọi nhóm nhưng bản thân nhóm phải có task riêng mới coi là có việc.
+      // [QA] (alwaysCount) counts in every group, but a group only counts as having work if it has its own tasks.
       const items = f.children.filter((c) => {
         const p = summaryPrefix(c.summary);
         return prefixSet.has(p) || alwaysCount.has(p);
@@ -322,7 +322,7 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
       for (const unitNumber of unitNumbers) {
         const unit = units.get(unitNumber);
         if (!unit) {
-          console.warn(`  ! [${f.number}] ${groupName}: không thấy unit "${unitNumber}" bên khách`);
+          console.warn(`  ! [${f.number}] ${groupName}: unit "${unitNumber}" not found on the customer side`);
           continue;
         }
         if (!perUnit.has(unitNumber)) perUnit.set(unitNumber, { unit, items: [], features: new Map() });
@@ -350,8 +350,8 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
     }
   }
 
-  // 3. In kế hoạch.
-  console.log("Kế hoạch ghi sang khách (rollup theo unit của khách)");
+  // 3. Print the plan.
+  console.log("Plan for writes to the customer (rollup per customer unit)");
   console.log("-".repeat(112));
   let willWrite = 0;
   const byUnit = new Map<string, PlannedWrite[]>();
@@ -375,7 +375,7 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   }
 
   if (focusKey) {
-    // Unit khách đã xác nhận ngoài phạm vi phía mình -> không báo hụt nữa.
+    // Customer units confirmed as out of our scope -> no longer reported as gaps.
     const outOfScope = new Set((pairs._outOfScope as string[] | undefined) || []);
     const unitNotes = (pairs._notes as Record<string, string> | undefined) || {};
     const mapped = new Set(perUnit.keys());
@@ -387,7 +387,7 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
       gaps.push({ unit, mine, note: unitNotes[unit.number] });
     }
     gaps.sort((a, b) => cmpWbs(a.unit.number, b.unit.number));
-    console.log(`\nFOCUS — khách giao cho "${focusName}" nhưng nội bộ chưa khai cặp (${gaps.length} unit):`);
+    console.log(`\nFOCUS — assigned by the customer to "${focusName}" but not paired internally (${gaps.length} units):`);
     for (const g of gaps) {
       console.log(
         `  ${g.unit.number.padEnd(8)}${(g.unit.tag || "-").padEnd(14)}${g.unit.title.slice(0, 34).padEnd(36)}` +
@@ -395,12 +395,12 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
       );
       if (g.note) console.log(`  ${" ".repeat(8)}-> ${g.note}`);
     }
-    if (outOfScope.size) console.log(`  (bỏ qua ${outOfScope.size} unit đã xác nhận ngoài scope: ${[...outOfScope].join(", ")})`);
-    if (outOfFocus) console.log(`  (${outOfFocus} leaf đã ghép cặp nhưng khách không assign cho "${focusName}" -> bỏ qua)`);
+    if (outOfScope.size) console.log(`  (skipped ${outOfScope.size} units confirmed out of scope: ${[...outOfScope].join(", ")})`);
+    if (outOfFocus) console.log(`  (${outOfFocus} paired leaves not assigned to "${focusName}" by the customer -> skipped)`);
   }
 
   if (noWork.length) {
-    console.log(`\nNhóm chưa có task nội bộ -> bỏ qua (${noWork.length}):`);
+    console.log(`\nGroups with no internal tasks yet -> skipped (${noWork.length}):`);
     for (const n of noWork) {
       console.log(`  [${n.f.number}] ${n.groupName} -> ${n.unitNumbers.join(", ")}  (${n.epicTitle.slice(0, 60)})`);
     }
@@ -408,20 +408,20 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   const unmappedNumbered = unmapped.filter((u) => u.f.numbered);
   const unmappedOther = unmapped.filter((u) => !u.f.numbered);
   if (unmappedNumbered.length) {
-    console.log(`\nEpic đánh số chưa khai cặp -> KHÔNG ghi gì (${unmappedNumbered.length}):`);
+    console.log(`\nNumbered epics not paired -> NOTHING written (${unmappedNumbered.length}):`);
     for (const u of unmappedNumbered) {
-      console.log(`  [${u.f.number}] ${u.epicTitle.slice(0, 70)}${u.note ? `\n         ghi chú: ${u.note}` : ""}`);
+      console.log(`  [${u.f.number}] ${u.epicTitle.slice(0, 70)}${u.note ? `\n         note: ${u.note}` : ""}`);
     }
   }
   if (unmappedOther.length) {
-    console.log(`\nEpic chưa đánh số, chưa khai cặp (${unmappedOther.length}):`);
+    console.log(`\nUnnumbered epics, not paired (${unmappedOther.length}):`);
     for (const u of unmappedOther) {
-      console.log(`  ${u.f.number} ${u.epicTitle.slice(0, 66)}${u.note ? `\n         ghi chú: ${u.note}` : ""}`);
+      console.log(`  ${u.f.number} ${u.epicTitle.slice(0, 66)}${u.note ? `\n         note: ${u.note}` : ""}`);
     }
   }
-  if (unmapped.length) console.log(`  -> điền ${pairFile} (chạy --units để xem danh sách unit khách).`);
+  if (unmapped.length) console.log(`  -> fill in ${pairFile} (run --units to see the customer unit list).`);
 
-  // 4. Ghi.
+  // 4. Write.
   let wrote = 0, comments = 0;
   for (const w of writes) {
     const hasFieldWrite = Object.keys(w.fields).length > 0;
@@ -435,7 +435,7 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
     if (needComment) {
       const marker = profile.dest.write?.commentMarker || "<!-- backlog-bridge-progress -->";
       const content = renderComment(marker, w, profile.dest.write?.orgName);
-      // Update lại chính comment tiến độ cũ để không spam board khách.
+      // Update the existing progress comment in place so the customer's board isn't spammed.
       const existing = (await dst.getComments(w.destIssue.issueKey))
         .find((c) => typeof c.content === "string" && c.content.includes(marker));
       if (existing) await dst.updateComment(w.destIssue.issueKey, existing.id, content);
@@ -455,13 +455,13 @@ export async function run({ config, profile, profileName }: RunContext<ProgressP
   }
 
   console.log(
-    `\nDone. Unit khách được ghép: ${perUnit.size}, tính năng chưa khai cặp: ${unmapped.length}, ` +
-    `leaf khách cần ghi: ${willWrite}, đã ghi: ${wrote}, comment: ${comments}.`
+    `\nDone. Customer units paired: ${perUnit.size}, features not paired: ${unmapped.length}, ` +
+    `customer leaves to write: ${willWrite}, written: ${wrote}, comments: ${comments}.`
   );
-  if (!LIVE) console.log("(dry-run: chưa ghi gì sang Backlog khách. Thêm --live để ghi thật.)");
+  if (!LIVE) console.log("(dry-run: nothing written to the customer's Backlog. Add --live to actually write.)");
 }
 
-// Quyết định ghi gì lên 1 leaf của khách + các chốt an toàn.
+// Decide what to write to one customer leaf + safety guards.
 function planWrite(ctx: PlanContext): PlannedWrite {
   const { r, destIssue, statusMap, statusByName, neverTouch, ALLOW_REGRESS, WRITE_DATES, dstStatuses } = ctx;
   const fields: Params = {};
@@ -470,15 +470,15 @@ function planWrite(ctx: PlanContext): PlannedWrite {
   let note: string;
 
   if (!wantName) {
-    note = `giữ nguyên (${curName})`;
+    note = `unchanged (${curName})`;
   } else if (wantName === curName) {
-    note = `đã đúng (${curName})`;
+    note = `already (${curName})`;
   } else if (curName && neverTouch.has(curName)) {
-    note = `BỎ QUA — khách đang "${curName}"`;
+    note = `SKIP — customer is at "${curName}"`;
   } else if (!ALLOW_REGRESS && (statusByName.get(wantName)?.displayOrder ?? 0) < (destIssue.status?.displayOrder ?? 0)) {
-    note = `BỎ QUA lùi trạng thái "${curName}" -> "${wantName}"`;
+    note = `SKIP moving status backwards "${curName}" -> "${wantName}"`;
   } else if (!statusByName.has(wantName)) {
-    note = `!! khách không có status "${wantName}" (có: ${dstStatuses.map((s) => s.name).join(", ")})`;
+    note = `!! customer has no status "${wantName}" (available: ${dstStatuses.map((s) => s.name).join(", ")})`;
   } else {
     fields.statusId = statusByName.get(wantName)!.id;
     note = `"${curName}" -> "${wantName}"`;
@@ -489,14 +489,14 @@ function planWrite(ctx: PlanContext): PlannedWrite {
     if (r.due) fields.dueDate = r.due;
   }
 
-  const detail = `con: ${r.total} (xong ${r.counts.done}, đang ${r.counts.active}, dừng ${r.counts.pending}, chưa ${r.counts.other})` +
-    `${r.start || r.due ? `  lịch nội bộ ${r.start || "?"} → ${r.due || "?"}` : ""}`;
+  const detail = `children: ${r.total} (done ${r.counts.done}, in progress ${r.counts.active}, paused ${r.counts.pending}, not started ${r.counts.other})` +
+    `${r.start || r.due ? `  internal schedule ${r.start || "?"} → ${r.due || "?"}` : ""}`;
 
   return { ...ctx, fields, note, detail };
 }
 
-// Comment tiến độ gửi khách — tiếng Nhật, marker ẩn để lần sau update lại chính nó.
-// orgName (dest.write.orgName) là tên phía mình hiện trong câu chú thích, vd "Acme" -> "Acme 側の内部タスク".
+// Progress comment for the customer — in Japanese, with a hidden marker so the next run updates it in place.
+// orgName (dest.write.orgName) is our side's name shown in the footnote, e.g. "Acme" -> "Acme 側の内部タスク".
 function renderComment(marker: string, { r, unit }: PlannedWrite, orgName?: string): string {
   const today = new Date().toISOString().slice(0, 10);
   return [

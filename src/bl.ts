@@ -1,24 +1,24 @@
 #!/usr/bin/env node
-// bl — CLI đọc/ghi NHIỀU Backlog space cùng lúc, dùng chung .env + config.json với sync.
-// Làm "cầu nối" cho agent (Claude Code / Codex / Cursor / workspace): MCP Backlog chính chủ
-// chỉ gắn được 1 space, còn CLI này gọi được mọi space đã khai.
+// bl — CLI to read/write MANY Backlog spaces at once; shares .env + config.json with sync.
+// Acts as a "bridge" for agents (Claude Code / Codex / Cursor / workspace): the official Backlog MCP
+// can attach only 1 space, while this CLI can call every configured space.
 //
-//   bl setup [--uninstall] [--force]                # cài lệnh bl toàn cục + skill cho Claude/Codex/Cursor
-//   bl home [--init]                                # thư mục chứa .env/config/state; --init chép từ repo sang
-//   bl spaces [--check]                             # liệt kê space, --check gọi thử API
+//   bl setup [--uninstall] [--force]                # install global bl command + skills for Claude/Codex/Cursor
+//   bl home [--init]                                # directory holding .env/config/state; --init copies from repo
+//   bl spaces [--check]                             # list spaces, --check makes a test API call
 //   bl projects <space>
 //   bl issue <ref>                                  # ref = URL | <space> <KEY> | <KEY>
 //   bl comments <ref> [--count=20]
-//   bl search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
+//   bl search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
 //   bl activities <space> [--project=KEY] [--count=20]
 //   bl comment <ref> (--text=..|--file=path) [--yes]
-//   bl update <ref> field=value ... [--yes]         # status=<tên> assignee=<tên> dueDate=.. summary=..
+//   bl update <ref> field=value ... [--yes]         # status=<name> assignee=<name> dueDate=.. summary=..
 //   bl api <space> <METHOD> <path> [k=v ...] [--yes]
-//   bl sync [--list | --profile=<tên> ...]          # đồng bộ theo profile (src/sync.ts)
+//   bl sync [--list | --profile=<name> ...]         # sync by profile (src/sync.ts)
 //
-// Chưa cài toàn cục thì gọi thẳng: node src/bl.ts <lệnh>  /  node src/sync.ts.
-// Mọi lệnh GHI mặc định chỉ in ra request dự kiến; phải thêm --yes mới gửi thật.
-// --json: in JSON thô thay vì dạng rút gọn.
+// Not installed globally? Call directly: node src/bl.ts <command>  /  node src/sync.ts.
+// Every WRITE command only prints the planned request by default; add --yes to actually send it.
+// --json: print raw JSON instead of the condensed form.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -45,14 +45,14 @@ interface Ref {
 
 function client(name: string | undefined): BacklogClient {
   const s = name ? SPACES[name] : undefined;
-  if (!s) throw new Error(`Không có space "${name}". Đang có: ${Object.keys(SPACES).join(", ")}`);
+  if (!s) throw new Error(`No space "${name}". Available: ${Object.keys(SPACES).join(", ")}`);
   if (s.missing || !s.space || !s.apiKey) {
-    throw new Error(`Space "${name}" thiếu ${s.env}_SPACE / ${s.env}_API_KEY trong .env`);
+    throw new Error(`Space "${name}" is missing ${s.env}_SPACE / ${s.env}_API_KEY in .env`);
   }
   return new BacklogClient({ space: s.space, apiKey: s.apiKey });
 }
 
-// Project key -> space, suy ra từ các profile trong config.json.
+// Project key -> space, inferred from the profiles in config.json.
 function spaceOfProject(projectKey: string): string | undefined {
   const hits = new Set<string>();
   for (const p of Object.values(config.profiles || {})) {
@@ -63,60 +63,60 @@ function spaceOfProject(projectKey: string): string | undefined {
   return hits.size === 1 ? [...hits][0] : undefined;
 }
 
-// Nhận: URL Backlog | "<space> <KEY>" | "<KEY>" (space suy từ profile). Trả { space, key, rest }.
+// Accepts: Backlog URL | "<space> <KEY>" | "<KEY>" (space inferred from profiles). Returns { space, key, rest }.
 function resolveRef(args: string[]): Ref {
   const [a, b] = args;
-  if (!a) throw new Error("Thiếu issue: truyền URL, <space> <KEY> hoặc <KEY>");
+  if (!a) throw new Error("Missing issue: pass a URL, <space> <KEY> or <KEY>");
   if (/^https?:\/\//.test(a)) {
     const url = new URL(a);
     const space = Object.keys(SPACES).find((n) => {
       const host = SPACES[n].space;
       return host && hostOf(host) === url.host;
     });
-    if (!space) throw new Error(`Chưa có API key cho ${url.host}. Xem skill backlog-connect.`);
+    if (!space) throw new Error(`No API key yet for ${url.host}. See the backlog-connect skill.`);
     const key = url.pathname.match(/\/view\/([A-Z0-9_]+-\d+)/)?.[1];
-    if (!key) throw new Error(`URL không chứa issue key: ${a}`);
+    if (!key) throw new Error(`URL contains no issue key: ${a}`);
     return { space, key: checkKey(key), rest: args.slice(1) };
   }
   if (SPACES[a]) {
-    if (!b) throw new Error(`Thiếu issue key sau space "${a}"`);
+    if (!b) throw new Error(`Missing issue key after space "${a}"`);
     return { space: a, key: checkKey(b), rest: args.slice(2) };
   }
   checkKey(a);
   const projectKey = a.replace(/-\d+$/, "");
   const space = spaceOfProject(projectKey);
   if (!space) {
-    throw new Error(`Không suy ra được space của ${a}. Ghi rõ: <space> ${a} (space: ${Object.keys(SPACES).join(", ")})`);
+    throw new Error(`Cannot infer the space of ${a}. Specify it: <space> ${a} (spaces: ${Object.keys(SPACES).join(", ")})`);
   }
   return { space, key: a, rest: args.slice(1) };
 }
 
 const short = (d: string | null | undefined) => (d ? d.slice(0, 10) : "-");
 function issueLine(i: Issue): string {
-  return `${i.issueKey}  [${i.status?.name}]  ${i.assignee?.name || "(chưa assign)"}  due:${short(i.dueDate)}  ${i.summary}`;
+  return `${i.issueKey}  [${i.status?.name}]  ${i.assignee?.name || "(unassigned)"}  due:${short(i.dueDate)}  ${i.summary}`;
 }
 function print<T>(data: T, fmt?: (data: T) => string): void {
   if (JSON_OUT || !fmt) console.log(JSON.stringify(data, null, 2));
   else console.log(fmt(data));
 }
 
-// Ghi: không có --yes thì chỉ mô tả request.
+// Write: without --yes, only describe the request.
 async function write<T = any>(space: string, method: string, path: string, body: Params): Promise<T | null> {
   if (!YES) {
     console.log(`[DRY] ${space}: ${method} ${path}`);
     console.log(JSON.stringify(body, null, 2));
-    console.log("→ thêm --yes để gửi thật.");
+    console.log("→ add --yes to actually send.");
     return null;
   }
   return client(space).request<T>(method, path, { body });
 }
 
-// k=v ... -> object; key lặp lại thành mảng.
+// k=v ... -> object; repeated keys become an array.
 function kv(args: string[]): Record<string, string | string[]> {
   const out: Record<string, string | string[]> = {};
   for (const a of args) {
     const i = a.indexOf("=");
-    if (i < 1) throw new Error(`Tham số phải dạng key=value: ${a}`);
+    if (i < 1) throw new Error(`Argument must be key=value: ${a}`);
     const [k, v] = [a.slice(0, i), a.slice(i + 1)];
     out[k] = k in out ? ([] as string[]).concat(out[k], v) : v;
   }
@@ -130,15 +130,15 @@ async function findUser(bl: BacklogClient, projectKey: string, name: string): Pr
   const users = await bl.getProjectUsers(projectKey);
   const hits = users.filter((u) => norm(u.name).includes(norm(name)) || u.userId === name);
   if (hits.length !== 1) {
-    throw new Error(`assignee "${name}" khớp ${hits.length} người ở ${projectKey}: ${hits.map((u) => u.name).join(", ") || "-"}`);
+    throw new Error(`assignee "${name}" matches ${hits.length} people in ${projectKey}: ${hits.map((u) => u.name).join(", ") || "-"}`);
   }
   return hits[0];
 }
 
-// --- bl setup: cài toàn cục ---------------------------------------------------------------
-// Skill gốc đặt ở ~/.agents/skills (chuẩn Agent Skills: Codex + Cursor đọc), rồi symlink sang
-// ~/.claude/skills (Claude Code) và ~/.codex/skills (Codex bản cũ) nếu các thư mục đó đã có.
-// Chỉ đụng tới symlink trỏ về repo này; gặp file/thư mục khác cùng tên thì bỏ qua (trừ --force).
+// --- bl setup: global install ------------------------------------------------------------
+// Canonical skills live in ~/.agents/skills (Agent Skills standard: read by Codex + Cursor), then are
+// symlinked into ~/.claude/skills (Claude Code) and ~/.codex/skills (older Codex) if those directories exist.
+// Only touches symlinks pointing into this repo; any other file/directory with the same name is skipped (unless --force).
 const USER_HOME = os.homedir();
 const SKILL_ROOTS = [".agents/skills", ".claude/skills", ".codex/skills"].map((d) => path.join(USER_HOME, d));
 const BIN_DIR = path.join(USER_HOME, ".local", "bin");
@@ -149,13 +149,13 @@ function linkTarget(p: string): string | undefined {
 }
 const exists = (p: string) => { try { fs.lstatSync(p); return true; } catch { return false; } };
 
-// Symlink link -> target. Trả về mô tả việc đã làm.
+// Symlink link -> target. Returns a description of what was done.
 function placeLink(link: string, target: string, force: boolean): string {
   const current = linkTarget(link);
   if (current === target) return `= ${link}`;
   if (exists(link)) {
     const ours = current !== undefined && current.startsWith(ROOT + path.sep);
-    if (!ours && !force) return `! bỏ qua ${link} (đã có thứ khác cùng tên — dùng --force để thay)`;
+    if (!ours && !force) return `! skipped ${link} (something else with that name exists — use --force to replace)`;
     fs.rmSync(link, { recursive: !current, force: true });
   }
   fs.mkdirSync(path.dirname(link), { recursive: true });
@@ -172,36 +172,36 @@ function setupInstall(force: boolean): void {
     const canonical = path.join(SKILL_ROOTS[0], name);
     const result = placeLink(canonical, path.join(skillsSrc, name), force);
     console.log("  " + result);
-    if (result.startsWith("!")) continue; // skill gốc không phải của mình -> không trỏ Claude/Codex vào nó
+    if (result.startsWith("!")) continue; // canonical skill is not ours -> don't point Claude/Codex at it
     for (const root of SKILL_ROOTS.slice(1)) {
       if (fs.existsSync(path.dirname(root))) console.log("  " + placeLink(path.join(root, name), canonical, force));
     }
   }
 
-  // Cài qua npm thì npm đã đưa bl vào PATH; cài từ git clone thì symlink vào ~/.local/bin.
+  // Installed via npm: npm already put bl on PATH; installed from a git clone: symlink into ~/.local/bin.
   if (!ROOT.includes(`${path.sep}node_modules${path.sep}`)) {
-    console.log("Lệnh:");
+    console.log("Command:");
     console.log("  " + placeLink(path.join(BIN_DIR, "bl"), path.join(ROOT, "bin", "bl"), force));
     const onPath = (process.env.PATH || "").split(path.delimiter).includes(BIN_DIR);
-    if (!onPath) console.log(`  ! ${BIN_DIR} chưa có trong PATH — thêm: export PATH="$HOME/.local/bin:$PATH"`);
+    if (!onPath) console.log(`  ! ${BIN_DIR} is not on PATH — add: export PATH="$HOME/.local/bin:$PATH"`);
   }
 
-  // Thư mục home + .env mẫu (chmod 600). Không bao giờ ghi đè .env đã có.
+  // Home directory + sample .env (chmod 600). Never overwrites an existing .env.
   const home = setting("HOME") ? path.resolve(setting("HOME")!) : DEFAULT_HOME;
   fs.mkdirSync(path.join(home, "state"), { recursive: true, mode: 0o700 });
   const envFile = path.join(home, ".env");
-  console.log("Dữ liệu:");
+  console.log("Data:");
   if (exists(envFile)) {
     console.log(`  = ${envFile}`);
   } else {
     fs.copyFileSync(path.join(ROOT, ".env.example"), envFile);
     fs.chmodSync(envFile, 0o600);
-    console.log(`  + ${envFile} (mẫu — điền <PREFIX>_SPACE / <PREFIX>_API_KEY cho từng space)`);
+    console.log(`  + ${envFile} (sample — fill in <PREFIX>_SPACE / <PREFIX>_API_KEY for each space)`);
   }
   if (!exists(path.join(home, "config.json"))) {
-    console.log(`  (chưa có config.json — chỉ cần khi dùng bl sync; mẫu: ${path.join(ROOT, "config.example.json")})`);
+    console.log(`  (no config.json yet — only needed for bl sync; sample: ${path.join(ROOT, "config.example.json")})`);
   }
-  console.log("\nXong. Kiểm tra: bl spaces --check");
+  console.log("\nDone. Verify with: bl spaces --check");
 }
 
 function setupUninstall(): void {
@@ -210,7 +210,7 @@ function setupUninstall(): void {
     if (!fs.existsSync(root)) continue;
     for (const name of fs.readdirSync(root)) links.push(path.join(root, name));
   }
-  // Gỡ symlink trỏ vào repo này, và symlink ở ~/.claude|~/.codex trỏ tới skill gốc của nó ở ~/.agents/skills.
+  // Remove symlinks pointing into this repo, and symlinks in ~/.claude|~/.codex pointing to its canonical skills in ~/.agents/skills.
   const ourCanonical = new Set<string>();
   for (const link of links) {
     const t = linkTarget(link);
@@ -223,11 +223,11 @@ function setupUninstall(): void {
       console.log(`- ${link}`);
     }
   }
-  console.log(`Giữ nguyên dữ liệu ở ${homeDir()} (.env, config.json, state/).`);
+  console.log(`Kept data in ${homeDir()} (.env, config.json, state/).`);
 }
 
 function warnLooseEnv(): void {
-  for (const p of looseEnvFiles()) console.warn(`! ${p} đang cho người khác đọc được — chạy: chmod 600 "${p}"`);
+  for (const p of looseEnvFiles()) console.warn(`! ${p} is readable by others — run: chmod 600 "${p}"`);
 }
 
 const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
@@ -236,12 +236,12 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
     else setupInstall(hasFlag("force"));
   },
 
-  // --init: chép .env, config.json, state/*.json từ repo sang home (không ghi đè file đã có).
+  // --init: copy .env, config.json, state/*.json from the repo to home (never overwrites existing files).
   async home() {
     if (hasFlag("init")) {
       const configured = setting("HOME");
       const target = configured ? path.resolve(configured) : DEFAULT_HOME;
-      if (target === ROOT) throw new Error("BACKLOG_BRIDGE_HOME đang trỏ vào chính repo");
+      if (target === ROOT) throw new Error("BACKLOG_BRIDGE_HOME points at the repo itself");
       fs.mkdirSync(path.join(target, "state"), { recursive: true });
       const files = [".env", "config.json"].concat(
         fs.existsSync(path.join(ROOT, "state"))
@@ -252,27 +252,27 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
         const from = path.join(ROOT, f);
         const to = path.join(target, f);
         if (!fs.existsSync(from)) continue;
-        if (fs.existsSync(to)) { console.log(`bỏ qua ${f} (đã có ở home)`); continue; }
+        if (fs.existsSync(to)) { console.log(`skipped ${f} (already in home)`); continue; }
         fs.copyFileSync(from, to);
         if (f === ".env") fs.chmodSync(to, 0o600);
-        console.log(`chép ${f}`);
+        console.log(`copied ${f}`);
       }
-      console.log(`\nXong. Kiểm tra lại rồi có thể xoá .env / state/*.json trong repo.`);
+      console.log(`\nDone. Double-check, then you can delete .env / state/*.json in the repo.`);
     }
     const cfg = configPath();
-    const hint = homeDir() === ROOT ? "  (gốc repo — chạy 'home --init' để chuyển ra ngoài)"
-      : homeDir() === LEGACY_HOME ? `  (tên cũ — đổi bằng: mv "${LEGACY_HOME}" "${DEFAULT_HOME}")` : "";
+    const hint = homeDir() === ROOT ? "  (repo root — run 'home --init' to move it out)"
+      : homeDir() === LEGACY_HOME ? `  (old name — rename with: mv "${LEGACY_HOME}" "${DEFAULT_HOME}")` : "";
     console.log(`home   : ${homeDir()}${hint}`);
-    console.log(`config : ${cfg}${fs.existsSync(cfg) ? "" : "  (chưa có — chỉ dùng được space khai qua env)"}`);
-    console.log(`.env   : ${envFiles().join(", ") || "(không có — dùng biến môi trường)"}`);
+    console.log(`config : ${cfg}${fs.existsSync(cfg) ? "" : "  (missing — only spaces declared via env are usable)"}`);
+    console.log(`.env   : ${envFiles().join(", ") || "(none — using environment variables)"}`);
     const review = reviewPrefs();
     const reviewText = review.mode === "bilingual"
-      ? `bilingual — duyệt bản song ngữ ${review.customerLang} + ${review.lang}, chỉ gửi bản ${review.customerLang}`
+      ? `bilingual — review a bilingual ${review.customerLang} + ${review.lang} draft, send only ${review.customerLang}`
       : review.mode === "translate"
-        ? `translate — duyệt bản ${review.lang}, rồi dịch sang ${review.customerLang} và gửi luôn`
+        ? `translate — review in ${review.lang}, then translate to ${review.customerLang} and send`
         : review.invalid
-          ? `! BACKLOG_BRIDGE_REVIEW="${review.invalid}" không hợp lệ (bilingual | translate)`
-          : "(chưa đặt — thêm BACKLOG_BRIDGE_REVIEW=bilingual|translate vào .env, xem .env.example)";
+          ? `! BACKLOG_BRIDGE_REVIEW="${review.invalid}" is invalid (bilingual | translate)`
+          : "(not set — add BACKLOG_BRIDGE_REVIEW=bilingual|translate to .env, see .env.example)";
     console.log(`review : ${reviewText}`);
     warnLooseEnv();
   },
@@ -280,13 +280,13 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   async spaces() {
     warnLooseEnv();
     for (const [name, s] of Object.entries(SPACES)) {
-      let line = `${name.padEnd(12)} ${s.missing || !s.space ? "(thiếu key)" : hostOf(s.space)}  env:${s.env}_*  [${s.from}]`;
+      let line = `${name.padEnd(12)} ${s.missing || !s.space ? "(missing key)" : hostOf(s.space)}  env:${s.env}_*  [${s.from}]`;
       if (hasFlag("check") && !s.missing) {
         try {
           const me = await client(name).getMyself();
           line += `  OK as ${me.name}`;
         } catch (e) {
-          line += `  LỖI ${(e as Error).message}`;
+          line += `  ERROR ${(e as Error).message}`;
         }
       }
       console.log(line);
@@ -307,7 +307,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
       issueLine(x),
       `type:${x.issueType?.name}  priority:${x.priority?.name}  start:${short(x.startDate)}  updated:${short(x.updated)}`,
       "",
-      x.description || "(không có mô tả)",
+      x.description || "(no description)",
     ].join("\n"));
   },
 
@@ -335,7 +335,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
       params.statusId = statuses.filter((s) => s.name !== "Closed").map((s) => s.id);
     }
     const list = await bl.request<Issue[]>("GET", "/issues", { params });
-    print(list, (l) => l.map(issueLine).join("\n") || "(không có issue)");
+    print(list, (l) => l.map(issueLine).join("\n") || "(no issues)");
   },
 
   async activities([space]) {
@@ -356,9 +356,9 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
     const { space, key } = resolveRef(args);
     const file = argValue("file");
     const content = argValue("text") ?? (file && fs.readFileSync(safeCommentFile(file), "utf8"));
-    if (!content) throw new Error("Thiếu --text=... hoặc --file=path");
+    if (!content) throw new Error("Missing --text=... or --file=path");
     const res = await write<Comment>(space, "POST", `/issues/${key}/comments`, { content });
-    if (res) console.log(`Đã comment #${res.id} lên ${space} ${key}`);
+    if (res) console.log(`Posted comment #${res.id} on ${space} ${key}`);
   },
 
   async update(args) {
@@ -369,12 +369,12 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
     const projectKey = key.replace(/-\d+$/, "");
     if (status) {
       const st = (await bl.getStatuses(projectKey)).find((s) => norm(s.name) === norm(String(status)));
-      if (!st) throw new Error(`${projectKey} không có status "${status}"`);
+      if (!st) throw new Error(`${projectKey} has no status "${status}"`);
       fields.statusId = st.id;
     }
     if (assignee) fields.assigneeId = (await findUser(bl, projectKey, String(assignee))).id;
     const res = await write<Issue>(space, "PATCH", `/issues/${key}`, fields);
-    if (res) console.log(`Đã cập nhật ${space} ${res.issueKey}: ${issueLine(res)}`);
+    if (res) console.log(`Updated ${space} ${res.issueKey}: ${issueLine(res)}`);
   },
 
   async api([space, rawMethod, path, ...rest]) {
@@ -400,6 +400,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err: Error) => {
-  console.error("Lỗi:", err.message);
+  console.error("Error:", err.message);
   process.exit(1);
 });

@@ -12,7 +12,7 @@ Cầu nối tới **nhiều [Backlog](https://backlog.com) (Nulab) space cùng l
 
 Không có dependency lúc chạy. Node.js **>= 22.18** chạy thẳng mã TypeScript, không cần build.
 
-> Thông báo của CLI hiện bằng tiếng Việt. Lệnh, flag và key trong config bằng tiếng Anh.
+> Thông báo của CLI bằng tiếng Anh.
 
 ## Cài đặt
 

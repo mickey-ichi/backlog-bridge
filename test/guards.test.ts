@@ -9,11 +9,11 @@ test("checkKey: only PROJECT-123 shaped keys pass", () => {
   assert.equal(checkKey("DEV-42"), "DEV-42");
   assert.equal(checkKey("ACME_JP-1"), "ACME_JP-1");
   for (const bad of ["../projects/X", "DEV-1/../../x", "dev-1", "DEV-", "DEV-1?x=1", ""]) {
-    assert.throws(() => checkKey(bad), /không hợp lệ/, bad);
+    assert.throws(() => checkKey(bad), /invalid/i, bad);
   }
 });
 
-// Home giả có .env, config.json, state/ và một bản nháp hợp lệ (vd home là repo config của team).
+// Fake home with .env, config.json, state/ and an ordinary draft (e.g. a home that is a team config repo).
 let home: string, outside: string;
 before(() => {
   home = fs.mkdtempSync(path.join(os.tmpdir(), "bb-guard-home-"));

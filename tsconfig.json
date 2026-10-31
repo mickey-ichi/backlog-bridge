@@ -1,6 +1,6 @@
 {
-  // Node >= 22.18 chạy thẳng file .ts (type stripping) nên chỉ dùng cú pháp xoá được:
-  // không enum / namespace / parameter property, import phải ghi đuôi .ts.
+  // Node >= 22.18 runs .ts directly (type stripping), so only erasable syntax is allowed:
+  // no enum / namespace / parameter properties; imports use the .ts extension.
   "compilerOptions": {
     "target": "es2023",
     "module": "nodenext",

@@ -1,12 +1,12 @@
 #!/bin/sh
-# bl — lệnh toàn cục của backlog-bridge. Chạy được từ mọi thư mục:
-#   bl <lệnh bl ...>        -> src/bl.ts
+# bl — global command of backlog-bridge. Runs from any directory:
+#   bl <bl command ...>     -> src/bl.ts
 #   bl sync [flag ...]      -> src/sync.ts
-# Tự tìm Node đủ mới (máy có nhiều bản qua nvm, bản mặc định có thể quá cũ):
-#   $BACKLOG_BRIDGE_NODE > node trên PATH > ~/.nvm/versions/node/* > Homebrew.
+# Finds a recent enough Node by itself (machines may have several via nvm; the default may be too old):
+#   $BACKLOG_BRIDGE_NODE > node on PATH > ~/.nvm/versions/node/* > Homebrew.
 set -e
 
-# Đường dẫn thật của script (bl thường được gọi qua symlink trong ~/.local/bin hoặc npm bin).
+# Real path of the script (bl is usually invoked via a symlink in ~/.local/bin or npm bin).
 self=$0
 while [ -L "$self" ]; do
   link=$(readlink "$self")
@@ -14,7 +14,7 @@ while [ -L "$self" ]; do
 done
 root=$(cd "$(dirname "$self")/.." && pwd)
 
-# Cài qua npm (nằm trong node_modules) -> Node không chạy .ts ở đó, dùng bản build dist/.
+# Installed via npm (inside node_modules) -> Node won't run .ts there, use the dist/ build.
 case $root in
   */node_modules/*) entry_dir=$root/dist ext=js min="20 11" ;;
   *) entry_dir=$root/src ext=ts min="22 18" ;;
@@ -36,8 +36,8 @@ pick_node() {
 }
 
 node=$(pick_node) || {
-  echo "backlog-bridge cần Node.js >= $(echo $min | tr ' ' .) (không tìm thấy bản nào đủ mới)." >&2
-  echo "Cài bằng: nvm install 22   — hoặc đặt BACKLOG_BRIDGE_NODE=/đường/dẫn/tới/node" >&2
+  echo "backlog-bridge needs Node.js >= $(echo $min | tr ' ' .) (no recent enough version found)." >&2
+  echo "Install with: nvm install 22   — or set BACKLOG_BRIDGE_NODE=/path/to/node" >&2
   exit 1
 }
 

@@ -1,5 +1,5 @@
-// Chế độ "mirror": copy issue từ project nguồn sang project đích, tạo issue mới ở đích.
-// Thường dùng cho chiều Backlog khách -> Backlog nội bộ (task khách đã plan thành task nội bộ).
+// "mirror" mode: copy issues from the source project to the destination project, creating new issues at the destination.
+// Typically used for customer Backlog -> internal Backlog (planned customer tasks become internal tasks).
 import { BacklogClient } from "./backlog.ts";
 import { credentials, readJson, writeJson, hasFlag, argValue } from "./config.ts";
 import type { CustomField, CustomFieldItem, Issue, MirrorProfile, Named, ParamValue, RunContext } from "./types.ts";
@@ -17,11 +17,11 @@ interface ResolvedCustomField {
 }
 
 // "Nguyen Van An (D3.React)" -> "nguyen van an", "Đức" -> "duc"
-// Bỏ phần trong ngoặc vì suffix hai bên thường khác nhau (vd khách D3.React vs nội bộ R2.React).
+// Drop the parenthesized part because the suffix usually differs between sides (e.g. customer D3.React vs internal R2.React).
 export function normalizeName(name: string | null | undefined): string {
   return (name || "")
     .replace(/\([^)]*\)/g, " ")
-    // đ/Đ không tách được bằng NFD nên phải thay tay, nếu không "Đức" -> "uc".
+    // đ/Đ cannot be decomposed by NFD so it must be replaced by hand, otherwise "Đức" -> "uc".
     .replace(/[đĐ]/g, "d")
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-zA-Z0-9]+/g, " ")
@@ -52,8 +52,8 @@ function resolveId(
   return fallbackId;
 }
 
-// map.assignee đổi người phụ trách khi sang nội bộ (khách assign A nhưng nội bộ giao B làm).
-// Khớp theo tên đã chuẩn hoá nên khai trong config không cần đúng suffix trong ngoặc.
+// map.assignee changes the assignee on the internal side (customer assigns A but internally B does it).
+// Matching uses normalized names, so config entries need not have the exact parenthesized suffix.
 function resolveAssigneeId(
   sourceName: string | undefined,
   destUserByName: Map<string, number>,
@@ -65,7 +65,7 @@ function resolveAssigneeId(
     if (normalizeName(from) !== key) continue;
     const id = destUserByName.get(normalizeName(to));
     if (id) return id;
-    console.warn(`  ! map.assignee "${from}" -> "${to}": đích không có user này -> thử khớp tên gốc`);
+    console.warn(`  ! map.assignee "${from}" -> "${to}": destination has no such user -> trying the original name`);
     break;
   }
   return destUserByName.get(key);
@@ -73,9 +73,9 @@ function resolveAssigneeId(
 
 const KEY_ONLY = /^\s*\[?([A-Z][A-Z0-9_]*-\d+)\]?/;
 
-// Quét project đích, dựng map { sourceKey -> destKey } từ prefix trong summary.
-// Đây là nguồn chống trùng chính: state file có thể mất hoặc chưa từng tồn tại
-// (các issue trước đây được tạo tay), lúc đó chỉ dựa vào state sẽ tạo trùng toàn bộ.
+// Scan the destination project and build a { sourceKey -> destKey } map from the summary prefix.
+// This is the main source of de-duplication: the state file may be lost or may never have existed
+// (earlier issues were created by hand), in which case relying on state alone would duplicate everything.
 async function discoverExistingMirrors(dest: BacklogClient, destProjectId: number, sourceProjectKey: string) {
   const mirrors: Record<string, string> = {};
   const destIssues = await dest.getAllIssues(destProjectId);
@@ -86,9 +86,9 @@ async function discoverExistingMirrors(dest: BacklogClient, destProjectId: numbe
   return { mirrors, scanned: destIssues.length };
 }
 
-// Một số project đích bắt buộc custom field theo issue type (vd type Bug cần "Bug Weight" + "Bug Type").
-// profile.dest.customFields khai theo TÊN field -> tên item (hoặc giá trị thô cho field text/số).
-// Resolve một lần lúc bắt đầu chạy (kể cả dry-run) để field/item sai tên lộ ra ngay, không đợi lúc tạo thật.
+// Some destination projects require custom fields per issue type (e.g. type Bug needs "Bug Weight" + "Bug Type").
+// profile.dest.customFields maps field NAME -> item name (or a raw value for text/number fields).
+// Resolved once at the start of the run (dry-run included) so wrong field/item names surface immediately, not only at real creation time.
 export function resolveCustomFields(
   defaults: MirrorProfile["dest"]["customFields"],
   destCustomFields: CustomField[],
@@ -97,7 +97,7 @@ export function resolveCustomFields(
   for (const [fieldName, wanted] of Object.entries(defaults || {})) {
     const field = destCustomFields.find((f) => f.name.trim().toLowerCase() === fieldName.trim().toLowerCase());
     if (!field) {
-      console.warn(`  ! Không tìm thấy custom field "${fieldName}" ở đích -> bỏ qua`);
+      console.warn(`  ! Custom field "${fieldName}" not found at destination -> skipped`);
       continue;
     }
     const entry = { field, key: `customField_${field.id}` };
@@ -108,10 +108,10 @@ export function resolveCustomFields(
     for (const name of wantedItems) {
       const item = fieldItems.find((i) => i.name.trim().toLowerCase() === String(name).trim().toLowerCase());
       if (item) items.push(item);
-      else console.warn(`  ! Custom field "${fieldName}" không có item "${name}" -> bỏ qua`);
+      else console.warn(`  ! Custom field "${fieldName}" has no item "${name}" -> skipped`);
     }
     if (!items.length) continue;
-    // Một giá trị -> scalar; nhiều giá trị -> mảng, client gửi lặp key customField_<id> (không "[]").
+    // One value -> scalar; multiple values -> array, the client repeats the customField_<id> key (no "[]").
     const ids = items.map((i) => i.id);
     resolved.push({ ...entry, value: ids.length === 1 ? ids[0] : ids, label: items.map((i) => i.name).join("+") });
   }
@@ -122,8 +122,8 @@ const appliesTo = (field: CustomField, issueTypeId: number | undefined) =>
   !field.applicableIssueTypes?.length ||
   (issueTypeId !== undefined && field.applicableIssueTypes.includes(issueTypeId));
 
-// Field đã khai và áp dụng cho issue type đang tạo; cảnh báo (mỗi cặp type/field một lần) field
-// bắt buộc của type đó mà profile chưa khai — tạo thật sẽ bị Backlog báo "... is required".
+// Fields that are declared and apply to the issue type being created; warns (once per type/field pair) about required
+// fields of that type the profile has not declared — real creation would fail with Backlog's "... is required".
 export function customFieldsFor(
   resolved: ResolvedCustomField[],
   destCustomFields: CustomField[],
@@ -136,7 +136,7 @@ export function customFieldsFor(
     const once = `${issueTypeId}:${f.id}`;
     if (warned.has(once)) continue;
     warned.add(once);
-    console.warn(`  ! Custom field bắt buộc "${f.name}" chưa khai ở dest.customFields -> tạo issue type này sẽ lỗi`);
+    console.warn(`  ! Required custom field "${f.name}" is not set in dest.customFields -> creating this issue type will fail`);
   }
   return {
     body: Object.fromEntries(fields.map((c) => [c.key, c.value])),
@@ -150,16 +150,16 @@ function toDateOnly(value: string | null | undefined): string | undefined {
 
 export async function run({ config, profile, profileName }: RunContext<MirrorProfile>): Promise<void> {
   const DRY_RUN = hasFlag("dry-run");
-  // Mặc định CHỈ tạo issue mới. Muốn ghi đè summary/description/date/status của issue
-  // đã có ở đích thì phải bật --update (issue ở đích thường đã được sửa tay ở nội bộ).
+  // By default ONLY new issues are created. To overwrite summary/description/date/status of issues
+  // already at the destination, pass --update (destination issues are often edited by hand internally).
   const ALLOW_UPDATE = hasFlag("update");
   const STATE_FILE = profile.state || `state/${profileName}.json`;
 
-  // --assignee=An,Binh  (khớp lỏng theo tên, bỏ dấu và bỏ phần trong ngoặc)
+  // --assignee=An,Binh  (loose name match, ignoring diacritics and the parenthesized part)
   const ASSIGNEE_FILTER = (argValue("assignee") || "")
     .split(",").map((s) => s.trim()).filter(Boolean)
     .concat(profile.filter?.assignees || []);
-  // --since=YYYY-MM-DD  (chỉ lấy issue có dueDate >= ngày này)
+  // --since=YYYY-MM-DD  (only issues with dueDate >= this date)
   const DUE_SINCE = argValue("since");
 
   function matchesAssigneeFilter(issue: Issue): boolean {
@@ -168,8 +168,8 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
     if (!actual) return false;
     return ASSIGNEE_FILTER.some((wanted) => {
       const w = normalizeName(wanted);
-      // Tên quá ngắn sau khi chuẩn hoá sẽ match bừa (vd "an" khớp cả "Lan" lẫn "Tuan").
-      if (w.length < 3) throw new Error(`--assignee="${wanted}" quá ngắn/không hợp lệ sau khi chuẩn hoá ("${w}")`);
+      // Names too short after normalization match arbitrarily (e.g. "an" matches both "Lan" and "Tuan").
+      if (w.length < 3) throw new Error(`--assignee="${wanted}" is too short/invalid after normalization ("${w}")`);
       return actual.includes(w);
     });
   }
@@ -181,10 +181,10 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
 
   console.log(`Profile: ${profileName} (mode=mirror)`);
   console.log(`Mode: ${DRY_RUN ? "DRY-RUN (no writes)" : "LIVE"}`);
-  console.log(`Source (khách): ${source.host} / ${profile.source.projectKey}`);
-  console.log(`Dest (nội bộ):  ${dest.host} / ${profile.dest.projectKey}`);
+  console.log(`Source (customer): ${source.host} / ${profile.source.projectKey}`);
+  console.log(`Dest (internal):  ${dest.host} / ${profile.dest.projectKey}`);
   if (ASSIGNEE_FILTER.length) console.log(`Assignee filter: ${ASSIGNEE_FILTER.join(", ")}`);
-  if (DUE_SINCE) console.log(`Due date từ: ${DUE_SINCE}`);
+  if (DUE_SINCE) console.log(`Due date from: ${DUE_SINCE}`);
   console.log(`Last sync: ${state.lastSync || "never"}\n`);
 
   const srcProject = await source.getProject(profile.source.projectKey);
@@ -212,9 +212,9 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
     dest, destProject.id, profile.source.projectKey
   );
   const known: Record<string, string> = { ...mirrors, ...state.issues };
-  console.log(`Đã quét ${scanned} issue ở đích -> ${Object.keys(mirrors).length} issue đã sync.`);
+  console.log(`Scanned ${scanned} issues at destination -> ${Object.keys(mirrors).length} already synced.`);
 
-  // Lấy toàn bộ issue nguồn rồi lọc (không dùng updatedSince: state có thể không khớp thực tế).
+  // Fetch all source issues then filter (not using updatedSince: state may not match reality).
   const allIssues = await source.getAllIssues(srcProject.id);
   const skipped = { assignee: 0, noDueDate: 0, tooOld: 0, alreadySynced: 0 };
   const issues = allIssues.filter((issue) => {
@@ -225,8 +225,8 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
     return true;
   });
   console.log(
-    `Nguồn: ${allIssues.length} issue -> ${issues.length} đủ điều kiện ` +
-    `(bỏ ${skipped.assignee} sai assignee, ${skipped.noDueDate} chưa có due date, ${skipped.tooOld} due trước ${DUE_SINCE}).\n`
+    `Source: ${allIssues.length} issues -> ${issues.length} eligible ` +
+    `(skipped ${skipped.assignee} wrong assignee, ${skipped.noDueDate} no due date, ${skipped.tooOld} due before ${DUE_SINCE}).\n`
   );
 
   let created = 0, updated = 0, statusChanges = 0;
@@ -240,19 +240,19 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
     );
 
     const fields = {
-      // Convention: "<SRC>-4889 <title gốc>" — prefix issue key là cơ sở chống trùng ở trên.
-      // Không thêm marker/link vào description — truy vết bằng prefix issueKey ở summary.
+      // Convention: "<SRC>-4889 <original title>" — the issue key prefix is the basis for the de-duplication above.
+      // No marker/link is added to the description — traceability is via the issueKey prefix in the summary.
       summary: `${issue.issueKey} ${issue.summary}`,
       description: issue.description || "",
       startDate: toDateOnly(issue.startDate),
       dueDate: toDateOnly(issue.dueDate),
     };
 
-    // Assignee khớp theo tên đã chuẩn hoá (sau khi áp map.assignee);
-    // không tìm thấy thì để trống (PM tự phân).
+    // Assignee is matched by normalized name (after applying map.assignee);
+    // if not found, leave unassigned (the PM assigns it).
     const assigneeId = resolveAssigneeId(issue.assignee?.name, destUserByName, profile.map?.assignee);
     if (issue.assignee && !assigneeId) {
-      console.warn(`  ! Không tìm thấy "${issue.assignee.name}" ở ${profile.dest.projectKey} -> để trống assignee`);
+      console.warn(`  ! "${issue.assignee.name}" not found in ${profile.dest.projectKey} -> leaving unassigned`);
     }
 
     const existingKey = known[issue.issueKey];
@@ -273,7 +273,7 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
         });
         state.issues[issue.issueKey] = createdIssue.issueKey;
         known[issue.issueKey] = createdIssue.issueKey;
-        // Backlog không cho set status khi tạo -> set ngay sau khi tạo.
+        // Backlog doesn't allow setting status on create -> set it right after creating.
         const statusId = resolveId(
           issue.status?.name, destStatusByName, profile.map?.status, undefined, "status"
         );
@@ -283,14 +283,14 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
         }
       }
     } else if (!ALLOW_UPDATE) {
-      // Mặc định: đã có ở đích -> bỏ qua, không ghi đè công việc đã sửa tay bên nội bộ.
+      // Default: already at destination -> skip, don't overwrite work edited by hand internally.
       skipped.alreadySynced++;
       state.issues[issue.issueKey] = existingKey;
     } else {
       console.log(`~ UPDATE  ${issue.issueKey} -> ${existingKey}  ${issue.summary}`);
       updated++;
       if (!DRY_RUN) {
-        state.issues[issue.issueKey] = existingKey; // ghi lại mirror phát hiện qua summary
+        state.issues[issue.issueKey] = existingKey; // record the mirror discovered via summary
         await dest.updateIssue(existingKey, { ...fields, priorityId });
         const statusId = resolveId(
           issue.status?.name, destStatusByName, profile.map?.status, undefined, "status"
@@ -308,10 +308,10 @@ export async function run({ config, profile, profileName }: RunContext<MirrorPro
 
   console.log(
     `\nDone. Created: ${created}, Updated: ${updated}, ` +
-    `Đã có sẵn (bỏ qua): ${skipped.alreadySynced}, Status set: ${statusChanges}.`
+    `Already existing (skipped): ${skipped.alreadySynced}, Status set: ${statusChanges}.`
   );
   if (!ALLOW_UPDATE && skipped.alreadySynced) {
-    console.log("(dùng --update nếu muốn ghi đè issue đã có ở đích)");
+    console.log("(use --update to overwrite issues already at the destination)");
   }
   if (DRY_RUN) console.log("(dry-run: state file not modified)");
 }

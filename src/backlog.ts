@@ -45,8 +45,8 @@ export class BacklogClient {
       const form = new URLSearchParams();
       for (const [k, v] of Object.entries(body)) {
         if (v === undefined || v === null) continue;
-        // customField_<id> nhiều giá trị: Backlog muốn lặp lại đúng key, gửi "customField_<id>[]"
-        // thì API vẫn báo "... is required". Các mảng khác giữ hậu tố "[]" theo docs.
+        // Multi-value customField_<id>: Backlog wants the exact key repeated; sending "customField_<id>[]"
+        // still makes the API report "... is required". Other arrays keep the "[]" suffix per the docs.
         const name = k.startsWith("customField_") ? k : `${k}[]`;
         if (Array.isArray(v)) v.forEach((item) => form.append(name, String(item)));
         else form.append(k, String(v));
@@ -65,7 +65,7 @@ export class BacklogClient {
     return data as T;
   }
 
-  // Lối thoát chung cho CLI đa space (src/bl.ts) — gọi endpoint bất kỳ của API v2.
+  // Generic escape hatch for the multi-space CLI (src/bl.ts) — call any API v2 endpoint.
   request<T = any>(method: string, path: string, opts?: RequestOptions): Promise<T> {
     return this.#request<T>(method, path, opts);
   }
@@ -102,7 +102,7 @@ export class BacklogClient {
   getCustomFields(projectIdOrKey: number | string) {
     return this.#request<CustomField[]>("GET", `/projects/${projectIdOrKey}/customFields`);
   }
-  // Comment mới nhất trước (order=desc) — dùng để tìm lại comment tiến độ đã đăng.
+  // Newest comments first (order=desc) — used to find previously posted progress comments.
   getComments(issueIdOrKey: number | string, { count = 100, order = "desc" } = {}) {
     return this.#request<Comment[]>("GET", `/issues/${issueIdOrKey}/comments`, { params: { count, order } });
   }

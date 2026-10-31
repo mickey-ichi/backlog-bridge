@@ -44,7 +44,7 @@ bl home        # line "review : …"
 3. Send it right away: dry run, then `--yes` without asking again (the approval of step 1 covers this send).
    Then tell the user what was sent, with the translation of the final text back into their language.
 
-**Not set** (`review : (chưa đặt …)`) → ask the user once which case applies, use it for this write, and tell them the
+**Not set** (`review : (not set …)`) → ask the user once which case applies, use it for this write, and tell them the
 line to add to their `.env` (`BACKLOG_BRIDGE_REVIEW=bilingual` or `=translate`). Never edit `.env` yourself.
 
 The same applies to other customer-facing text: issue summaries/descriptions written with `bl update` or `bl api`.

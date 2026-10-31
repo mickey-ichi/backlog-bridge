@@ -16,7 +16,7 @@ Each space is one `<PREFIX>_SPACE` + `<PREFIX>_API_KEY` pair in the `.env` of th
 bl spaces --check
 ```
 
-One line per space: name · host · env prefix · `OK as <key owner>` or `LỖI ...` (error).
+One line per space: name · host · env prefix · `OK as <key owner>` or `ERROR ...`.
 `401` = expired or wrong key → the user must create a new key. `403 Inactive Licence` = the space itself is inactive.
 
 ## Add a space

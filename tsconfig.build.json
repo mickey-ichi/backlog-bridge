@@ -1,5 +1,5 @@
 {
-  // Bản build ra dist/ (.js) cho trường hợp không chạy được .ts trực tiếp, vd cài qua npm.
+  // Build to dist/ (.js) for places that can't run .ts directly, e.g. installs via npm.
   "extends": "./tsconfig.json",
   "compilerOptions": { "noEmit": false, "outDir": "dist", "rootDir": "src" },
   "include": ["src"]
