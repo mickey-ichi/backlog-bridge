@@ -1,0 +1,45 @@
+#!/bin/sh
+# bl — lệnh toàn cục của backlog-bridge. Chạy được từ mọi thư mục:
+#   bl <lệnh bl ...>        -> src/bl.ts
+#   bl sync [flag ...]      -> src/sync.ts
+# Tự tìm Node đủ mới (máy có nhiều bản qua nvm, bản mặc định có thể quá cũ):
+#   $BACKLOG_BRIDGE_NODE > node trên PATH > ~/.nvm/versions/node/* > Homebrew.
+set -e
+
+# Đường dẫn thật của script (bl thường được gọi qua symlink trong ~/.local/bin hoặc npm bin).
+self=$0
+while [ -L "$self" ]; do
+  link=$(readlink "$self")
+  case $link in /*) self=$link ;; *) self=$(dirname "$self")/$link ;; esac
+done
+root=$(cd "$(dirname "$self")/.." && pwd)
+
+# Cài qua npm (nằm trong node_modules) -> Node không chạy .ts ở đó, dùng bản build dist/.
+case $root in
+  */node_modules/*) entry_dir=$root/dist ext=js min="20 11" ;;
+  *) entry_dir=$root/src ext=ts min="22 18" ;;
+esac
+
+node_ok() {
+  "$1" -e 'const [a,b]=process.versions.node.split(".").map(Number),[x,y]=process.argv.slice(1).map(Number);process.exit(a>x||(a===x&&b>=y)?0:1)' $min 2>/dev/null
+}
+
+pick_node() {
+  for n in "$BACKLOG_BRIDGE_NODE" "$(command -v node 2>/dev/null)"; do
+    [ -n "$n" ] && [ -x "$n" ] && node_ok "$n" && { echo "$n"; return; }
+  done
+  for n in $(ls -d "${NVM_DIR:-$HOME/.nvm}"/versions/node/v*/bin/node 2>/dev/null | sort -t v -k 2 -V -r) \
+           /opt/homebrew/bin/node /usr/local/bin/node; do
+    [ -x "$n" ] && node_ok "$n" && { echo "$n"; return; }
+  done
+  return 1
+}
+
+node=$(pick_node) || {
+  echo "backlog-bridge cần Node.js >= $(echo $min | tr ' ' .) (không tìm thấy bản nào đủ mới)." >&2
+  echo "Cài bằng: nvm install 22   — hoặc đặt BACKLOG_BRIDGE_NODE=/đường/dẫn/tới/node" >&2
+  exit 1
+}
+
+if [ "$1" = "sync" ]; then shift; exec "$node" "$entry_dir/sync.$ext" "$@"; fi
+exec "$node" "$entry_dir/bl.$ext" "$@"

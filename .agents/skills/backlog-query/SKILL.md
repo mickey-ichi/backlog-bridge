@@ -1,12 +1,12 @@
 ---
 name: backlog-query
-description: Read issues, comments, search results and activity across MANY Backlog spaces via the CLI node src/bl.ts. Use when the user pastes a Backlog link or issue key (e.g. https://acme.backlog.jp/view/ACME-123, DEV-42), asks "what's the status of this task", "find tasks assigned to X", "what did the customer comment today", or "compare the customer ticket with our internal one".
+description: Read issues, comments, search results and activity across MANY Backlog spaces via the CLI bl. Use when the user pastes a Backlog link or issue key (e.g. https://acme.backlog.jp/view/ACME-123, DEV-42), asks "what's the status of this task", "find tasks assigned to X", "what did the customer comment today", or "compare the customer ticket with our internal one".
 ---
 
 # Read Backlog across spaces
 
-Run from the repo root (Node >= 22.18; `Unknown file extension ".ts"` → `nvm use`).
-Connected spaces: `node src/bl.ts spaces` (none yet → skill `backlog-connect`).
+Works from any directory once `bl setup` has installed the `bl` command (it picks a Node >= 22.18 itself).
+Connected spaces: `bl spaces` (none yet → skill `backlog-connect`).
 
 ## Pointing at an issue (`<ref>`)
 
@@ -21,13 +21,13 @@ Issue keys must look like `PROJECT-123`.
 ## Commands
 
 ```bash
-node src/bl.ts issue <ref>                         # header + description
-node src/bl.ts comments <ref> --count=30           # oldest -> newest
-node src/bl.ts search <space> <PROJECT> --open --assignee=An --keyword=login --count=50
-node src/bl.ts search <space> <PROJECT> --assignee=me
-node src/bl.ts activities <space> --project=ACME --count=30
-node src/bl.ts projects <space>
-node src/bl.ts api <space> GET /projects/DEV/statuses   # any Backlog API v2 endpoint
+bl issue <ref>                         # header + description
+bl comments <ref> --count=30           # oldest -> newest
+bl search <space> <PROJECT> --open --assignee=An --keyword=login --count=50
+bl search <space> <PROJECT> --assignee=me
+bl activities <space> --project=ACME --count=30
+bl projects <space>
+bl api <space> GET /projects/DEV/statuses   # any Backlog API v2 endpoint
 ```
 
 Add `--json` for full fields (custom fields, attachments, parentIssueId, …).
@@ -39,7 +39,7 @@ Add `--json` for full fields (custom fields, attachments, parentIssueId, …).
 - `progress` profiles: internal epic `[NN]` ↔ customer WBS unit, declared in the profile's pairFile
   (`state/pairs-<profile>.json` in the home directory).
 
-`node src/sync.ts --list` prints the direction of every profile.
+`bl sync --list` prints the direction of every profile.
 
 ## Principles
 
