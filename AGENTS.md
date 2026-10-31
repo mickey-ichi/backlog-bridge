@@ -3,13 +3,16 @@
 This repo is a bridge to **many Backlog (Nulab) spaces at once** for any agent: Claude Code, Codex, Cursor, …
 No MCP server needed — the agent only needs a shell and Node >= 22.18.
 
-- `node src/bl.ts` — read/write issues, comments, search, activity on any connected space.
-- `node src/sync.ts` — one-way sync between two projects, driven by profiles in `config.json` (see `README.md`).
+Commands below use the global `bl` command (`bl setup` installs it). Inside this repo without it, use
+`node src/bl.ts …` for `bl …` and `node src/sync.ts …` for `bl sync …`.
+
+- `bl` — read/write issues, comments, search, activity on any connected space.
+- `bl sync` — one-way sync between two projects, driven by profiles in `config.json` (see `README.md`).
 - API keys, `config.json` and `state/` live in a home directory **outside** the repo
   (`$BACKLOG_BRIDGE_HOME`, default `~/.config/backlog-bridge`); one `<PREFIX>_SPACE` / `<PREFIX>_API_KEY`
-  pair per space. `node src/bl.ts home` prints the paths in use.
+  pair per space. `bl home` prints the paths in use.
 
-If the default Node is older than 22.18, run `nvm use` first (reads `.nvmrc`).
+`bl` finds a Node >= 22.18 by itself (PATH, nvm, Homebrew); when calling `node src/*.ts` directly, run `nvm use` first.
 
 ## Skills
 

@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   const config = loadConfig();
 
   if (hasFlag("list")) {
-    console.log(`Default profile: ${config.defaultProfile}\n`);
+    console.log(`Default profile: ${config.defaultProfile ?? "(chưa có — xem config.example.json)"}\n`);
     for (const [name, p] of Object.entries(config.profiles || {})) {
       console.log(`${name}  (mode=${p.mode})`);
       console.log(`  ${p.source.space}/${p.source.projectKey}  ->  ${p.dest.space}/${p.dest.projectKey}`);

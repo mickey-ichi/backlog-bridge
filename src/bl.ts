@@ -1,22 +1,26 @@
 #!/usr/bin/env node
-// bl — CLI đọc/ghi NHIỀU Backlog space cùng lúc, dùng chung .env + config.json với sync.ts.
+// bl — CLI đọc/ghi NHIỀU Backlog space cùng lúc, dùng chung .env + config.json với sync.
 // Làm "cầu nối" cho agent (Claude Code / Codex / Cursor / workspace): MCP Backlog chính chủ
 // chỉ gắn được 1 space, còn CLI này gọi được mọi space đã khai.
 //
-//   node src/bl.ts home [--init]                          # thư mục chứa .env/config/state; --init chép từ repo sang
-//   node src/bl.ts spaces [--check]                       # liệt kê space, --check gọi thử API
-//   node src/bl.ts projects <space>
-//   node src/bl.ts issue <ref>                            # ref = URL | <space> <KEY> | <KEY>
-//   node src/bl.ts comments <ref> [--count=20]
-//   node src/bl.ts search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
-//   node src/bl.ts activities <space> [--project=KEY] [--count=20]
-//   node src/bl.ts comment <ref> (--text=..|--file=path) [--yes]
-//   node src/bl.ts update <ref> field=value ... [--yes]   # status=<tên> assignee=<tên> dueDate=.. summary=..
-//   node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]
+//   bl setup [--uninstall] [--force]                # cài lệnh bl toàn cục + skill cho Claude/Codex/Cursor
+//   bl home [--init]                                # thư mục chứa .env/config/state; --init chép từ repo sang
+//   bl spaces [--check]                             # liệt kê space, --check gọi thử API
+//   bl projects <space>
+//   bl issue <ref>                                  # ref = URL | <space> <KEY> | <KEY>
+//   bl comments <ref> [--count=20]
+//   bl search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
+//   bl activities <space> [--project=KEY] [--count=20]
+//   bl comment <ref> (--text=..|--file=path) [--yes]
+//   bl update <ref> field=value ... [--yes]         # status=<tên> assignee=<tên> dueDate=.. summary=..
+//   bl api <space> <METHOD> <path> [k=v ...] [--yes]
+//   bl sync [--list | --profile=<tên> ...]          # đồng bộ theo profile (src/sync.ts)
 //
+// Chưa cài toàn cục thì gọi thẳng: node src/bl.ts <lệnh>  /  node src/sync.ts.
 // Mọi lệnh GHI mặc định chỉ in ra request dự kiến; phải thêm --yes mới gửi thật.
 // --json: in JSON thô thay vì dạng rút gọn.
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import {
   ROOT, DEFAULT_HOME, LEGACY_HOME, setting, homeDir, configPath, envFiles, looseEnvFiles, loadEnv, loadConfig, allSpaces, hostOf,
@@ -155,11 +159,107 @@ async function findUser(bl: BacklogClient, projectKey: string, name: string): Pr
   return hits[0];
 }
 
+// --- bl setup: cài toàn cục ---------------------------------------------------------------
+// Skill gốc đặt ở ~/.agents/skills (chuẩn Agent Skills: Codex + Cursor đọc), rồi symlink sang
+// ~/.claude/skills (Claude Code) và ~/.codex/skills (Codex bản cũ) nếu các thư mục đó đã có.
+// Chỉ đụng tới symlink trỏ về repo này; gặp file/thư mục khác cùng tên thì bỏ qua (trừ --force).
+const USER_HOME = os.homedir();
+const SKILL_ROOTS = [".agents/skills", ".claude/skills", ".codex/skills"].map((d) => path.join(USER_HOME, d));
+const BIN_DIR = path.join(USER_HOME, ".local", "bin");
+
+function linkTarget(p: string): string | undefined {
+  try { return fs.lstatSync(p).isSymbolicLink() ? path.resolve(path.dirname(p), fs.readlinkSync(p)) : undefined; }
+  catch { return undefined; }
+}
+const exists = (p: string) => { try { fs.lstatSync(p); return true; } catch { return false; } };
+
+// Symlink link -> target. Trả về mô tả việc đã làm.
+function placeLink(link: string, target: string, force: boolean): string {
+  const current = linkTarget(link);
+  if (current === target) return `= ${link}`;
+  if (exists(link)) {
+    const ours = current !== undefined && current.startsWith(ROOT + path.sep);
+    if (!ours && !force) return `! bỏ qua ${link} (đã có thứ khác cùng tên — dùng --force để thay)`;
+    fs.rmSync(link, { recursive: !current, force: true });
+  }
+  fs.mkdirSync(path.dirname(link), { recursive: true });
+  fs.symlinkSync(target, link);
+  return `+ ${link} -> ${target}`;
+}
+
+function setupInstall(force: boolean): void {
+  const skillsSrc = path.join(ROOT, ".agents", "skills");
+  const names = fs.readdirSync(skillsSrc).filter((n) => fs.existsSync(path.join(skillsSrc, n, "SKILL.md")));
+
+  console.log("Skill:");
+  for (const name of names) {
+    const canonical = path.join(SKILL_ROOTS[0], name);
+    const result = placeLink(canonical, path.join(skillsSrc, name), force);
+    console.log("  " + result);
+    if (result.startsWith("!")) continue; // skill gốc không phải của mình -> không trỏ Claude/Codex vào nó
+    for (const root of SKILL_ROOTS.slice(1)) {
+      if (fs.existsSync(path.dirname(root))) console.log("  " + placeLink(path.join(root, name), canonical, force));
+    }
+  }
+
+  // Cài qua npm thì npm đã đưa bl vào PATH; cài từ git clone thì symlink vào ~/.local/bin.
+  if (!ROOT.includes(`${path.sep}node_modules${path.sep}`)) {
+    console.log("Lệnh:");
+    console.log("  " + placeLink(path.join(BIN_DIR, "bl"), path.join(ROOT, "bin", "bl"), force));
+    const onPath = (process.env.PATH || "").split(path.delimiter).includes(BIN_DIR);
+    if (!onPath) console.log(`  ! ${BIN_DIR} chưa có trong PATH — thêm: export PATH="$HOME/.local/bin:$PATH"`);
+  }
+
+  // Thư mục home + .env mẫu (chmod 600). Không bao giờ ghi đè .env đã có.
+  const home = setting("HOME") ? path.resolve(setting("HOME")!) : DEFAULT_HOME;
+  fs.mkdirSync(path.join(home, "state"), { recursive: true, mode: 0o700 });
+  const envFile = path.join(home, ".env");
+  console.log("Dữ liệu:");
+  if (exists(envFile)) {
+    console.log(`  = ${envFile}`);
+  } else {
+    fs.copyFileSync(path.join(ROOT, ".env.example"), envFile);
+    fs.chmodSync(envFile, 0o600);
+    console.log(`  + ${envFile} (mẫu — điền <PREFIX>_SPACE / <PREFIX>_API_KEY cho từng space)`);
+  }
+  if (!exists(path.join(home, "config.json"))) {
+    console.log(`  (chưa có config.json — chỉ cần khi dùng bl sync; mẫu: ${path.join(ROOT, "config.example.json")})`);
+  }
+  console.log("\nXong. Kiểm tra: bl spaces --check");
+}
+
+function setupUninstall(): void {
+  const links = [path.join(BIN_DIR, "bl")];
+  for (const root of SKILL_ROOTS) {
+    if (!fs.existsSync(root)) continue;
+    for (const name of fs.readdirSync(root)) links.push(path.join(root, name));
+  }
+  // Gỡ symlink trỏ vào repo này, và symlink ở ~/.claude|~/.codex trỏ tới skill gốc của nó ở ~/.agents/skills.
+  const ourCanonical = new Set<string>();
+  for (const link of links) {
+    const t = linkTarget(link);
+    if (t && t.startsWith(ROOT + path.sep)) { ourCanonical.add(link); }
+  }
+  for (const link of links) {
+    const t = linkTarget(link);
+    if (t && (t.startsWith(ROOT + path.sep) || ourCanonical.has(t))) {
+      fs.unlinkSync(link);
+      console.log(`- ${link}`);
+    }
+  }
+  console.log(`Giữ nguyên dữ liệu ở ${homeDir()} (.env, config.json, state/).`);
+}
+
 function warnLooseEnv(): void {
   for (const p of looseEnvFiles()) console.warn(`! ${p} đang cho người khác đọc được — chạy: chmod 600 "${p}"`);
 }
 
 const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
+  async setup() {
+    if (hasFlag("uninstall")) setupUninstall();
+    else setupInstall(hasFlag("force"));
+  },
+
   // --init: chép .env, config.json, state/*.json từ repo sang home (không ghi đè file đã có).
   async home() {
     if (hasFlag("init")) {
@@ -306,7 +406,9 @@ async function main(): Promise<void> {
   const [cmd, ...args] = positional;
   const run = cmd ? COMMANDS[cmd] : undefined;
   if (!run) {
-    console.log(fs.readFileSync(import.meta.filename, "utf8").split("\n").slice(1, 17).map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
+    const lines = fs.readFileSync(import.meta.filename, "utf8").split("\n").slice(1);
+    const header = lines.slice(0, lines.findIndex((l) => !l.startsWith("//")));
+    console.log(header.map((l) => l.replace(/^\/\/ ?/, "")).join("\n"));
     process.exit(cmd ? 1 : 0);
   }
   await run(args);

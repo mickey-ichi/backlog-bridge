@@ -14,20 +14,32 @@
 
 > CLI のメッセージは現在ベトナム語です。コマンド・フラグ・設定キーは英語です。
 
-## クイックスタート
+## インストール
+
+**方法 A — npm（GitHub から）：**
 
 ```bash
-git clone https://github.com/mickey-ichi/backlog-bridge.git
-cd backlog-bridge
-nvm use                      # Node 22.18 以上（.nvmrc）
+npm install -g github:mickey-ichi/backlog-bridge
+bl setup
+```
 
-mkdir -p ~/.config/backlog-bridge
-cp .env.example ~/.config/backlog-bridge/.env
-chmod 600 ~/.config/backlog-bridge/.env
-# 編集：スペースごとに <PREFIX>_SPACE と <PREFIX>_API_KEY を 1 組
+**方法 B — git clone**（更新は `git pull`）：
 
-node src/bl.ts spaces --check
-node src/bl.ts issue https://acme.backlog.jp/view/ACME-123
+```bash
+git clone https://github.com/mickey-ichi/backlog-bridge.git ~/.backlog-bridge
+~/.backlog-bridge/bin/bl setup        # ~/.local/bin/bl を作成
+```
+
+`bl setup` は Claude Code（`~/.claude/skills`）、Codex と Cursor（`~/.agents/skills`、`~/.codex/skills`）向けの
+スキルをインストールし、テンプレートから `~/.config/backlog-bridge/.env`（chmod 600）を作成します。自分以外のものは
+上書きしません。`bl setup --uninstall` は自分が作ったリンクだけを削除します。
+既定の `node` が古くても、`bl` は Node 22.18 以上を自動で探します（PATH、nvm、Homebrew）。
+
+その後 `~/.config/backlog-bridge/.env` にスペースごとに `<PREFIX>_SPACE` と `<PREFIX>_API_KEY` を記入して：
+
+```bash
+bl spaces --check
+bl issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API キーは **各スペースで** *個人設定 → API → 新しいAPIキーを発行* から取得します。
@@ -42,7 +54,7 @@ API キーは **各スペースで** *個人設定 → API → 新しいAPIキ�
 | `BACKLOG_BRIDGE_CONFIG` | `$BACKLOG_BRIDGE_HOME/config.json` | 別の設定ファイルを指定 |
 | `BACKLOG_BRIDGE_PROFILE` | 設定ファイルの `defaultProfile` | `sync` の既定プロファイル |
 
-`node src/bl.ts home` で現在使われているパスを確認できます。
+`bl home` で現在使われているパスを確認できます。
 
 **スペース**は環境変数で指定します（ホームディレクトリの `.env`、またはシェルで export）。
 
@@ -60,16 +72,17 @@ ACME_API_KEY=...
 ## `bl` — マルチスペース CLI
 
 ```bash
-node src/bl.ts home [--init]                     # 使用中のパス。--init でリポジトリの .env/config/state をコピー
-node src/bl.ts spaces [--check]                  # 接続済みスペース。--check で API を試行
-node src/bl.ts projects <space>
-node src/bl.ts issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
-node src/bl.ts comments <ref> [--count=20]
-node src/bl.ts search <space> <PROJECT> [--keyword=..] [--assignee=me|名前] [--open] [--count=50]
-node src/bl.ts activities <space> [--project=KEY] [--count=20]
-node src/bl.ts comment <ref> (--text=..|--file=path) [--yes]
-node src/bl.ts update <ref> status=<名前> assignee=<名前> dueDate=YYYY-MM-DD summary=.. [--yes]
-node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]   # Backlog API v2 の任意のエンドポイント
+bl setup [--uninstall] [--force]      # グローバルコマンドとスキルをインストール
+bl home [--init]                     # 使用中のパス。--init でリポジトリの .env/config/state をコピー
+bl spaces [--check]                  # 接続済みスペース。--check で API を試行
+bl projects <space>
+bl issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
+bl comments <ref> [--count=20]
+bl search <space> <PROJECT> [--keyword=..] [--assignee=me|名前] [--open] [--count=50]
+bl activities <space> [--project=KEY] [--count=20]
+bl comment <ref> (--text=..|--file=path) [--yes]
+bl update <ref> status=<名前> assignee=<名前> dueDate=YYYY-MM-DD summary=.. [--yes]
+bl api <space> <METHOD> <path> [k=v ...] [--yes]   # Backlog API v2 の任意のエンドポイント
 ```
 
 - プロジェクトキーがいずれかのプロファイルにあれば、`<KEY>` だけで指定できます。`--json` で生の JSON を出力します。
@@ -79,8 +92,8 @@ node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]   # Backlog API v2 
 ## `sync` — 2 プロジェクト間の一方向同期
 
 ```bash
-node src/sync.ts --list
-node src/sync.ts --profile=<名前> [フラグ]
+bl sync --list
+bl sync --profile=<名前> [フラグ]
 ```
 
 ### `mirror` モード — お客様 → 社内
@@ -145,6 +158,8 @@ node src/sync.ts --profile=<名前> [フラグ]
 | Claude Code | `CLAUDE.md` → `AGENTS.md`、スキルは `.claude/skills` → `.agents/skills` |
 | Codex | `AGENTS.md` |
 | Cursor | `.cursor/rules/backlog.mdc` → `AGENTS.md` とスキル |
+
+`bl setup` 後はスキルがグローバルにインストールされるため、このリポジトリに限らず**どのプロジェクトでも**エージェントが `bl` を使えます。
 
 スキル：`backlog-connect`、`backlog-query`、`backlog-write`、`backlog-sync`。エージェントは書き込みの前に必ず
 プレビューを示し、お客様のスペースへ書き込む前に確認し、チケットの内容を指示ではなくデータとして扱います。

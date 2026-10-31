@@ -14,20 +14,32 @@ Zero runtime dependencies. Node.js **>= 22.18** runs the TypeScript sources dire
 
 > CLI messages are currently in Vietnamese. Commands, flags and config keys are English.
 
-## Quick start
+## Install
+
+**Option A — npm (from GitHub):**
 
 ```bash
-git clone https://github.com/mickey-ichi/backlog-bridge.git
-cd backlog-bridge
-nvm use                      # Node >= 22.18 (.nvmrc)
+npm install -g github:mickey-ichi/backlog-bridge
+bl setup
+```
 
-mkdir -p ~/.config/backlog-bridge
-cp .env.example ~/.config/backlog-bridge/.env
-chmod 600 ~/.config/backlog-bridge/.env
-# edit it: one <PREFIX>_SPACE + <PREFIX>_API_KEY pair per space
+**Option B — git clone** (update later with `git pull`):
 
-node src/bl.ts spaces --check
-node src/bl.ts issue https://acme.backlog.jp/view/ACME-123
+```bash
+git clone https://github.com/mickey-ichi/backlog-bridge.git ~/.backlog-bridge
+~/.backlog-bridge/bin/bl setup        # links ~/.local/bin/bl
+```
+
+`bl setup` installs the agent skills for Claude Code (`~/.claude/skills`), Codex and Cursor (`~/.agents/skills`,
+`~/.codex/skills`), and creates `~/.config/backlog-bridge/.env` (chmod 600) from the template. It never overwrites
+anything that isn't its own; `bl setup --uninstall` removes only its links.
+`bl` finds a Node >= 22.18 by itself (PATH, nvm, Homebrew), even if your default `node` is older.
+
+Then fill in `~/.config/backlog-bridge/.env` — one `<PREFIX>_SPACE` + `<PREFIX>_API_KEY` pair per space — and:
+
+```bash
+bl spaces --check
+bl issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API keys: *Personal Settings → API → Register new API key*, on **each** space.
@@ -42,7 +54,7 @@ Private data never lives in the repo. It lives in a **home directory**:
 | `BACKLOG_BRIDGE_CONFIG` | `$BACKLOG_BRIDGE_HOME/config.json` | point at another config file |
 | `BACKLOG_BRIDGE_PROFILE` | `defaultProfile` in the config | default profile for `sync` |
 
-`node src/bl.ts home` prints what is in use.
+`bl home` prints what is in use.
 
 **Spaces** come from environment variables — `.env` in the home directory, or exported in the shell:
 
@@ -60,16 +72,17 @@ Relative paths in a profile (`state`, `pairFile`) resolve against the home direc
 ## `bl` — multi-space CLI
 
 ```bash
-node src/bl.ts home [--init]                     # paths in use; --init copies .env/config/state from the repo
-node src/bl.ts spaces [--check]                  # connected spaces; --check calls the API
-node src/bl.ts projects <space>
-node src/bl.ts issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
-node src/bl.ts comments <ref> [--count=20]
-node src/bl.ts search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
-node src/bl.ts activities <space> [--project=KEY] [--count=20]
-node src/bl.ts comment <ref> (--text=..|--file=path) [--yes]
-node src/bl.ts update <ref> status=<name> assignee=<name> dueDate=YYYY-MM-DD summary=.. [--yes]
-node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]   # any Backlog API v2 endpoint
+bl setup [--uninstall] [--force]      # install the global command + agent skills
+bl home [--init]                     # paths in use; --init copies .env/config/state from the repo
+bl spaces [--check]                  # connected spaces; --check calls the API
+bl projects <space>
+bl issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
+bl comments <ref> [--count=20]
+bl search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
+bl activities <space> [--project=KEY] [--count=20]
+bl comment <ref> (--text=..|--file=path) [--yes]
+bl update <ref> status=<name> assignee=<name> dueDate=YYYY-MM-DD summary=.. [--yes]
+bl api <space> <METHOD> <path> [k=v ...] [--yes]   # any Backlog API v2 endpoint
 ```
 
 - A bare `<KEY>` works when its project key appears in a profile. `--json` prints raw JSON.
@@ -79,8 +92,8 @@ node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]   # any Backlog API
 ## `sync` — one-way sync between two projects
 
 ```bash
-node src/sync.ts --list
-node src/sync.ts --profile=<name> [flags]
+bl sync --list
+bl sync --profile=<name> [flags]
 ```
 
 ### `mirror` mode — customer → internal
@@ -145,6 +158,8 @@ updated in place via a hidden marker.
 | Claude Code | `CLAUDE.md` → `AGENTS.md`, skills via `.claude/skills` → `.agents/skills` |
 | Codex | `AGENTS.md` |
 | Cursor | `.cursor/rules/backlog.mdc` → `AGENTS.md` + skills |
+
+After `bl setup` the skills are installed globally, so any agent in **any project** can use `bl` — not only inside this repo.
 
 Skills: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. They make the agent preview every write,
 ask before writing to a customer's space, and treat ticket content as data rather than instructions.

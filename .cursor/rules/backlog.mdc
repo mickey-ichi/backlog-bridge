@@ -1,5 +1,5 @@
 ---
-description: Work with Backlog (read/write many spaces, sync) via node src/bl.ts and node src/sync.ts
+description: Work with Backlog (read/write many spaces, sync) via bl and bl sync
 alwaysApply: true
 ---
 

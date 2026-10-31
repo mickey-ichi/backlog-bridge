@@ -19,6 +19,20 @@
   ],
   "private": true,
   "type": "module",
+  "bin": {
+    "bl": "bin/bl"
+  },
+  "files": [
+    "bin",
+    "src",
+    "dist",
+    ".agents",
+    "config.example.json",
+    ".env.example",
+    "AGENTS.md",
+    "README*.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=22.18"
   },
@@ -27,7 +41,8 @@
     "dry-run": "node src/sync.ts --dry-run",
     "bl": "node src/bl.ts",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",

@@ -14,20 +14,32 @@ Không có dependency lúc chạy. Node.js **>= 22.18** chạy thẳng mã TypeS
 
 > Thông báo của CLI hiện bằng tiếng Việt. Lệnh, flag và key trong config bằng tiếng Anh.
 
-## Bắt đầu nhanh
+## Cài đặt
+
+**Cách A — npm (lấy từ GitHub):**
 
 ```bash
-git clone https://github.com/mickey-ichi/backlog-bridge.git
-cd backlog-bridge
-nvm use                      # Node >= 22.18 (.nvmrc)
+npm install -g github:mickey-ichi/backlog-bridge
+bl setup
+```
 
-mkdir -p ~/.config/backlog-bridge
-cp .env.example ~/.config/backlog-bridge/.env
-chmod 600 ~/.config/backlog-bridge/.env
-# sửa file: mỗi space một cặp <PREFIX>_SPACE + <PREFIX>_API_KEY
+**Cách B — git clone** (cập nhật sau này bằng `git pull`):
 
-node src/bl.ts spaces --check
-node src/bl.ts issue https://acme.backlog.jp/view/ACME-123
+```bash
+git clone https://github.com/mickey-ichi/backlog-bridge.git ~/.backlog-bridge
+~/.backlog-bridge/bin/bl setup        # tạo ~/.local/bin/bl
+```
+
+`bl setup` cài skill cho Claude Code (`~/.claude/skills`), Codex và Cursor (`~/.agents/skills`, `~/.codex/skills`),
+và tạo `~/.config/backlog-bridge/.env` (chmod 600) từ file mẫu. Lệnh không bao giờ ghi đè thứ không phải của nó;
+`bl setup --uninstall` chỉ gỡ các link nó đã tạo.
+`bl` tự tìm Node >= 22.18 (PATH, nvm, Homebrew), kể cả khi `node` mặc định của bạn cũ hơn.
+
+Sau đó điền `~/.config/backlog-bridge/.env` — mỗi space một cặp `<PREFIX>_SPACE` + `<PREFIX>_API_KEY` — rồi:
+
+```bash
+bl spaces --check
+bl issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API key: *Personal Settings → API → Register new API key*, ở **từng** space.
@@ -42,7 +54,7 @@ Dữ liệu riêng không bao giờ nằm trong repo mà ở **thư mục home**
 | `BACKLOG_BRIDGE_CONFIG` | `$BACKLOG_BRIDGE_HOME/config.json` | trỏ tới file config khác |
 | `BACKLOG_BRIDGE_PROFILE` | `defaultProfile` trong config | profile mặc định của `sync` |
 
-`node src/bl.ts home` in ra đường dẫn đang dùng.
+`bl home` in ra đường dẫn đang dùng.
 
 **Space** lấy từ biến môi trường — `.env` trong thư mục home, hoặc export trong shell:
 
@@ -60,16 +72,17 @@ prefix. `config.json` → `spaces` là tuỳ chọn (chỉ cần khi prefix khá
 ## `bl` — CLI đa space
 
 ```bash
-node src/bl.ts home [--init]                     # đường dẫn đang dùng; --init chép .env/config/state từ repo sang
-node src/bl.ts spaces [--check]                  # space đã nối; --check gọi thử API
-node src/bl.ts projects <space>
-node src/bl.ts issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
-node src/bl.ts comments <ref> [--count=20]
-node src/bl.ts search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
-node src/bl.ts activities <space> [--project=KEY] [--count=20]
-node src/bl.ts comment <ref> (--text=..|--file=path) [--yes]
-node src/bl.ts update <ref> status=<tên> assignee=<tên> dueDate=YYYY-MM-DD summary=.. [--yes]
-node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]   # endpoint bất kỳ của Backlog API v2
+bl setup [--uninstall] [--force]      # cài lệnh toàn cục + skill cho agent
+bl home [--init]                     # đường dẫn đang dùng; --init chép .env/config/state từ repo sang
+bl spaces [--check]                  # space đã nối; --check gọi thử API
+bl projects <space>
+bl issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
+bl comments <ref> [--count=20]
+bl search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
+bl activities <space> [--project=KEY] [--count=20]
+bl comment <ref> (--text=..|--file=path) [--yes]
+bl update <ref> status=<tên> assignee=<tên> dueDate=YYYY-MM-DD summary=.. [--yes]
+bl api <space> <METHOD> <path> [k=v ...] [--yes]   # endpoint bất kỳ của Backlog API v2
 ```
 
 - `<KEY>` trần dùng được khi project key của nó có trong một profile. `--json` in JSON thô.
@@ -79,8 +92,8 @@ node src/bl.ts api <space> <METHOD> <path> [k=v ...] [--yes]   # endpoint bất 
 ## `sync` — đồng bộ một chiều giữa hai project
 
 ```bash
-node src/sync.ts --list
-node src/sync.ts --profile=<tên> [flag]
+bl sync --list
+bl sync --profile=<tên> [flag]
 ```
 
 ### Mode `mirror` — khách → nội bộ
@@ -145,6 +158,8 @@ An toàn: **mặc định chỉ xem trước** (`--live` mới ghi), `neverTouch
 | Claude Code | `CLAUDE.md` → `AGENTS.md`, skill qua `.claude/skills` → `.agents/skills` |
 | Codex | `AGENTS.md` |
 | Cursor | `.cursor/rules/backlog.mdc` → `AGENTS.md` + skill |
+
+Sau `bl setup`, skill được cài toàn cục nên agent ở **bất kỳ project nào** cũng dùng được `bl` — không chỉ trong repo này.
 
 Skill: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. Chúng buộc agent xem trước mọi lệnh ghi,
 hỏi lại trước khi ghi lên space của khách, và coi nội dung ticket là dữ liệu chứ không phải chỉ dẫn.
