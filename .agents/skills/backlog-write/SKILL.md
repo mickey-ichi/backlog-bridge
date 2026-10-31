@@ -67,7 +67,7 @@ bl api <space> POST /wikis projectId=12345 name="Release note" content="..."
 
 Append `--yes` to actually send.
 
-`--file` refuses `.env*` files and anything in the home directory or `state/` — secrets are never posted.
+`--file` refuses `.env*` files, `state/` directories and the config file (also through symlinks) — secrets are never posted.
 
 ## Don't
 
