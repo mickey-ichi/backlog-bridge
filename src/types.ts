@@ -1,4 +1,4 @@
-// Kiểu dữ liệu dùng chung: response Backlog API v2 (chỉ các field code đang dùng) + schema config.json.
+// Shared types: Backlog API v2 responses (only the fields the code uses) + the config.json schema.
 // Docs: https://developer.nulab.com/docs/backlog/
 
 // --- Backlog API ---
@@ -59,7 +59,7 @@ export interface Activity {
   content?: { key_id?: number; summary?: string };
 }
 
-// Giá trị query/body gửi lên API: mảng -> lặp key (xem BacklogClient).
+// Query/body values sent to the API: arrays -> repeated keys (see BacklogClient).
 export type ParamValue = string | number | boolean | null | undefined | Array<string | number>;
 export type Params = Record<string, ParamValue>;
 

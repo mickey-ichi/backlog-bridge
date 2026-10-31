@@ -12,8 +12,6 @@ A bridge to **many [Backlog](https://backlog.com) (Nulab) spaces at once** — f
 
 Zero runtime dependencies. Node.js **>= 22.18** runs the TypeScript sources directly — no build step.
 
-> CLI messages are currently in Vietnamese. Commands, flags and config keys are English.
-
 ## Install
 
 **Option A — npm (from GitHub):**

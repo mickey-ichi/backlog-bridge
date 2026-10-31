@@ -37,8 +37,8 @@ Don't use `--update` (mirror) or `--allow-regress` (progress) unless the user ex
 ## Common warnings
 
 - `! No status/priority/issueType match` → add it to `profiles.<name>.map`.
-- `! Không tìm thấy "<name>"` (member not found) → add `map.assignee` if names differ between the two spaces.
-- `Custom field bắt buộc ... chưa khai` / `... is required` → declare `dest.customFields` (by field name + item name).
+- `! "<name>" not found in <PROJECT>` → add `map.assignee` if names differ between the two spaces.
+- `! Required custom field ... is not set` / `... is required` → declare `dest.customFields` (by field name + item name).
 - `401` → key expired; `403 Inactive Licence` → the space is inactive. See skill `backlog-connect`.
 
 ## Add a profile for a new project pair

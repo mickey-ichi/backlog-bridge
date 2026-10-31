@@ -1,16 +1,16 @@
-// Load .env + resolve spaces/profiles từ config.json.
+// Load .env + resolve spaces/profiles from config.json.
 //
-// Dữ liệu riêng (API key, config.json, state/) KHÔNG nằm trong repo mà ở thư mục "home":
-//   $BACKLOG_BRIDGE_HOME  >  ~/.config/backlog-bridge  >  ~/.config/backlog-sync (tên cũ)  >  gốc repo
-// (thư mục ~/.config chỉ được chọn nếu đã tồn tại). File config chỉ định riêng bằng $BACKLOG_BRIDGE_CONFIG.
-// Biến tên cũ BACKLOG_SYNC_* vẫn nhận làm fallback để máy cài trước khi đổi tên không bị vỡ.
-// Không có config.json thì vẫn chạy được bl.ts chỉ với biến môi trường <PREFIX>_SPACE / <PREFIX>_API_KEY.
+// Private data (API keys, config.json, state/) does NOT live in the repo but in the "home" directory:
+//   $BACKLOG_BRIDGE_HOME  >  ~/.config/backlog-bridge  >  ~/.config/backlog-sync (old name)  >  repo root
+// (a ~/.config directory is only picked if it already exists). The config file can be set separately with $BACKLOG_BRIDGE_CONFIG.
+// Old-name BACKLOG_SYNC_* variables are still accepted as a fallback so installs from before the rename don't break.
+// Without config.json, bl.ts still runs using only the <PREFIX>_SPACE / <PREFIX>_API_KEY environment variables.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { Config, Credentials, Profile } from "./types.ts";
 
-// src/ khi chạy thẳng .ts, dist/ khi chạy bản build — cả hai đều nằm ngay dưới gốc repo.
+// src/ when running .ts directly, dist/ when running the build — both sit directly under the repo root.
 export const ROOT = path.join(import.meta.dirname, "..");
 export const DEFAULT_HOME = path.join(os.homedir(), ".config", "backlog-bridge");
 export const LEGACY_HOME = path.join(os.homedir(), ".config", "backlog-sync");
@@ -19,10 +19,10 @@ export function setting(name: "HOME" | "CONFIG" | "PROFILE"): string | undefined
   return process.env[`BACKLOG_BRIDGE_${name}`] || process.env[`BACKLOG_SYNC_${name}`];
 }
 
-// Cách duyệt nội dung trước khi gửi khách — theo từng người, nên đặt trong .env của mình:
-//   BACKLOG_BRIDGE_REVIEW=bilingual  đọc được tiếng của khách: duyệt bản song ngữ, chỉ gửi bản tiếng khách
-//   BACKLOG_BRIDGE_REVIEW=translate  không đọc được: chỉ duyệt bản tiếng mình, agent dịch rồi gửi luôn
-//   BACKLOG_BRIDGE_LANG (mặc định vi), BACKLOG_BRIDGE_CUSTOMER_LANG (mặc định ja)
+// How content is reviewed before sending to the customer — per person, so set it in your own .env:
+//   BACKLOG_BRIDGE_REVIEW=bilingual  you can read the customer's language: review the bilingual version, send only the customer-language version
+//   BACKLOG_BRIDGE_REVIEW=translate  you can't read it: review only your own-language version, the agent translates and sends it
+//   BACKLOG_BRIDGE_LANG (default vi), BACKLOG_BRIDGE_CUSTOMER_LANG (default ja)
 export type ReviewMode = "bilingual" | "translate";
 export interface ReviewPrefs {
   mode?: ReviewMode;
@@ -54,12 +54,12 @@ export function homeDir(): string {
   return [DEFAULT_HOME, LEGACY_HOME].find((d) => fs.existsSync(d)) || ROOT;
 }
 
-// Các file .env đang được đọc (home trước, repo sau).
+// The .env files being read (home first, then repo).
 export function envFiles(): string[] {
   return [...new Set([homeDir(), ROOT])].map((d) => path.join(d, ".env")).filter((p) => fs.existsSync(p));
 }
 
-// .env chứa API key -> chỉ chủ máy được đọc (chmod 600).
+// .env holds API keys -> only the machine owner may read it (chmod 600).
 export function looseEnvFiles(): string[] {
   return envFiles().filter((p) => (fs.statSync(p).mode & 0o077) !== 0);
 }
@@ -69,8 +69,8 @@ export function configPath(): string {
   return configured ? path.resolve(configured) : path.join(homeDir(), "config.json");
 }
 
-// Tiny .env parser (không dùng dependency ngoài). Biến đã có trong môi trường luôn thắng;
-// .env ở home đọc trước, .env ở repo chỉ bù phần còn thiếu (giai đoạn chuyển dần sang home).
+// Tiny .env parser (no external dependencies). Variables already in the environment always win;
+// the home .env is read first, the repo .env only fills in what is missing (while gradually moving to home).
 export function loadEnv(): void {
   for (const p of envFiles()) {
     for (const line of fs.readFileSync(p, "utf8").split("\n")) {
@@ -88,12 +88,12 @@ export function loadConfig(): Config {
   return config;
 }
 
-// spaces."<name>" -> { env, envFallback } -> đọc <PREFIX>_SPACE / <PREFIX>_API_KEY.
+// spaces."<name>" -> { env, envFallback } -> read <PREFIX>_SPACE / <PREFIX>_API_KEY.
 export function credentials(config: Config, spaceName: string): Credentials {
-  // Không khai trong config.json -> dùng prefix = tên space viết hoa (acme -> ACME_*, acme_jp -> ACME_JP_*).
+  // Not declared in config.json -> use prefix = uppercased space name (acme -> ACME_*, acme_jp -> ACME_JP_*).
   const spec = config.spaces?.[spaceName] || { env: spaceName.toUpperCase().replace(/[^A-Z0-9_]/g, "_") };
-  // Host và key phải lấy từ CÙNG một prefix: ghép SPACE của prefix này với API_KEY của prefix khác
-  // là gửi key của space A sang host của space B.
+  // Host and key must come from the SAME prefix: pairing one prefix's SPACE with another prefix's API_KEY
+  // would send space A's key to space B's host.
   const prefix = [spec.env, spec.envFallback].find(
     (p) => p && process.env[`${p}_SPACE`] && process.env[`${p}_API_KEY`]
   );
@@ -101,14 +101,14 @@ export function credentials(config: Config, spaceName: string): Credentials {
   const apiKey = prefix && process.env[`${prefix}_API_KEY`];
   if (!space || !apiKey) {
     throw new Error(
-      `Thiếu ${spec.env}_SPACE / ${spec.env}_API_KEY trong .env (space "${spaceName}"). Xem .env.example.`
+      `Missing ${spec.env}_SPACE / ${spec.env}_API_KEY in .env (space "${spaceName}"). See .env.example.`
     );
   }
   return { space, apiKey };
 }
 
-// Mọi space dùng được: khai trong config.json + tự phát hiện cặp <PREFIX>_SPACE/<PREFIX>_API_KEY
-// trong .env (tên space = prefix viết thường). Nhờ vậy nối thêm 1 Backlog chỉ cần thêm 2 dòng .env.
+// All usable spaces: declared in config.json + auto-detected <PREFIX>_SPACE/<PREFIX>_API_KEY pairs
+// in .env (space name = lowercased prefix). So connecting another Backlog only takes 2 lines in .env.
 export function allSpaces(config: Config): Record<string, SpaceEntry> {
   const out: Record<string, SpaceEntry> = {};
   const usedPrefixes = new Set(["SOURCE", "DEST"]);
@@ -136,13 +136,13 @@ export function getProfile(config: Config, name?: string): { profileName: string
   const profile = config.profiles?.[profileName];
   if (!profile) {
     throw new Error(
-      `Không có profile "${profileName}". Đang có: ${Object.keys(config.profiles || {}).join(", ")}`
+      `No profile "${profileName}". Available: ${Object.keys(config.profiles || {}).join(", ")}`
     );
   }
   return { profileName, profile };
 }
 
-// Đường dẫn tương đối trong config.json (state, pairFile) tính từ thư mục home.
+// Relative paths in config.json (state, pairFile) are resolved from the home directory.
 export function resolvePath(relative: string): string {
   return path.isAbsolute(relative) ? relative : path.join(homeDir(), relative);
 }
