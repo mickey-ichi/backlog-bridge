@@ -164,6 +164,18 @@ After `bl setup` the skills are installed globally, so any agent in **any projec
 Skills: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. They make the agent preview every write,
 ask before writing to a customer's space, and treat ticket content as data rather than instructions.
 
+## Reviewing what goes to customers
+
+Each person sets how they review text before an agent sends it to a customer, in their own `.env`:
+
+| `BACKLOG_BRIDGE_REVIEW` | For | Flow |
+|---|---|---|
+| `bilingual` | you read the customer's language | review a bilingual draft (customer language + your language), only the customer-language text is sent |
+| `translate` | you don't | review in your language only; after approval the agent translates and sends right away |
+
+`BACKLOG_BRIDGE_LANG` (default `vi`) and `BACKLOG_BRIDGE_CUSTOMER_LANG` (default `ja`) set the two languages.
+`bl home` shows the current mode; when it is not set, the agent asks.
+
 ## Security
 
 - API keys only in `.env` in the home directory; `bl home` / `bl spaces` warn when it is readable by others.

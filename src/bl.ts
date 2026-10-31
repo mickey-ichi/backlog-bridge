@@ -23,7 +23,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
-  ROOT, DEFAULT_HOME, LEGACY_HOME, setting, homeDir, configPath, envFiles, looseEnvFiles, loadEnv, loadConfig, allSpaces, hostOf,
+  ROOT, DEFAULT_HOME, LEGACY_HOME, setting, reviewPrefs, homeDir, configPath, envFiles, looseEnvFiles, loadEnv, loadConfig, allSpaces, hostOf,
   hasFlag, argValue,
 } from "./config.ts";
 import { BacklogClient } from "./backlog.ts";
@@ -265,6 +265,15 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
     console.log(`home   : ${homeDir()}${hint}`);
     console.log(`config : ${cfg}${fs.existsSync(cfg) ? "" : "  (chưa có — chỉ dùng được space khai qua env)"}`);
     console.log(`.env   : ${envFiles().join(", ") || "(không có — dùng biến môi trường)"}`);
+    const review = reviewPrefs();
+    const reviewText = review.mode === "bilingual"
+      ? `bilingual — duyệt bản song ngữ ${review.customerLang} + ${review.lang}, chỉ gửi bản ${review.customerLang}`
+      : review.mode === "translate"
+        ? `translate — duyệt bản ${review.lang}, rồi dịch sang ${review.customerLang} và gửi luôn`
+        : review.invalid
+          ? `! BACKLOG_BRIDGE_REVIEW="${review.invalid}" không hợp lệ (bilingual | translate)`
+          : "(chưa đặt — thêm BACKLOG_BRIDGE_REVIEW=bilingual|translate vào .env, xem .env.example)";
+    console.log(`review : ${reviewText}`);
     warnLooseEnv();
   },
 

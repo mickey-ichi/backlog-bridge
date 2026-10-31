@@ -60,3 +60,17 @@ test("homeDir: explicit BACKLOG_BRIDGE_HOME is used as-is", () => {
   assert.equal(homeDir(), dir);
   assert.notEqual(homeDir(), ROOT);
 });
+
+test("reviewPrefs: modes, defaults and invalid values", async () => {
+  const { reviewPrefs } = await import("../src/config.ts");
+  for (const k of ["BACKLOG_BRIDGE_REVIEW", "BACKLOG_BRIDGE_LANG", "BACKLOG_BRIDGE_CUSTOMER_LANG"]) delete process.env[k];
+  assert.deepEqual(reviewPrefs(), { mode: undefined, invalid: undefined, lang: "vi", customerLang: "ja" });
+  process.env.BACKLOG_BRIDGE_REVIEW = " Translate ";
+  assert.equal(reviewPrefs().mode, "translate");
+  process.env.BACKLOG_BRIDGE_REVIEW = "both";
+  assert.equal(reviewPrefs().mode, undefined);
+  assert.equal(reviewPrefs().invalid, "both");
+  process.env.BACKLOG_BRIDGE_LANG = "en";
+  process.env.BACKLOG_BRIDGE_CUSTOMER_LANG = "ko";
+  assert.deepEqual([reviewPrefs().lang, reviewPrefs().customerLang], ["en", "ko"]);
+});
