@@ -89,7 +89,7 @@ async function discoverExistingMirrors(dest: BacklogClient, destProjectId: numbe
 // Một số project đích bắt buộc custom field theo issue type (vd type Bug cần "Bug Weight" + "Bug Type").
 // profile.dest.customFields khai theo TÊN field -> tên item (hoặc giá trị thô cho field text/số).
 // Resolve một lần lúc bắt đầu chạy (kể cả dry-run) để field/item sai tên lộ ra ngay, không đợi lúc tạo thật.
-function resolveCustomFields(
+export function resolveCustomFields(
   defaults: MirrorProfile["dest"]["customFields"],
   destCustomFields: CustomField[],
 ): ResolvedCustomField[] {
@@ -124,7 +124,7 @@ const appliesTo = (field: CustomField, issueTypeId: number | undefined) =>
 
 // Field đã khai và áp dụng cho issue type đang tạo; cảnh báo (mỗi cặp type/field một lần) field
 // bắt buộc của type đó mà profile chưa khai — tạo thật sẽ bị Backlog báo "... is required".
-function customFieldsFor(
+export function customFieldsFor(
   resolved: ResolvedCustomField[],
   destCustomFields: CustomField[],
   issueTypeId: number | undefined,
