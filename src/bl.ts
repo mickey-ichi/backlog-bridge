@@ -27,6 +27,7 @@ import {
   hasFlag, argValue,
 } from "./config.ts";
 import { BacklogClient } from "./backlog.ts";
+import { checkKey, safeCommentFile } from "./guards.ts";
 import type { Activity, Comment, Issue, Params, Project, User } from "./types.ts";
 
 loadEnv();
@@ -62,14 +63,6 @@ function spaceOfProject(projectKey: string): string | undefined {
   return hits.size === 1 ? [...hits][0] : undefined;
 }
 
-// Issue key đi thẳng vào path của request ghi (/issues/<key>) -> chỉ nhận đúng dạng PROJECT-123,
-// không để chuỗi như "../projects/X" đổi endpoint.
-const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-\d+$/;
-function checkKey(key: string): string {
-  if (!ISSUE_KEY.test(key)) throw new Error(`Issue key không hợp lệ: "${key}" (dạng PROJECT-123)`);
-  return key;
-}
-
 // Nhận: URL Backlog | "<space> <KEY>" | "<KEY>" (space suy từ profile). Trả { space, key, rest }.
 function resolveRef(args: string[]): Ref {
   const [a, b] = args;
@@ -96,23 +89,6 @@ function resolveRef(args: string[]): Ref {
     throw new Error(`Không suy ra được space của ${a}. Ghi rõ: <space> ${a} (space: ${Object.keys(SPACES).join(", ")})`);
   }
   return { space, key: a, rest: args.slice(1) };
-}
-
-// --file đọc nội dung để đăng lên Backlog (có thể là space khách) và in ra ở bản DRY. Chặn file chứa
-// secret / dữ liệu riêng: .env*, thư mục home (cả tên mới, tên cũ, $BACKLOG_BRIDGE_HOME) và state/ trong repo
-// — tránh agent bị prompt injection lừa đăng key.
-function safeCommentFile(file: string): string {
-  const p = fs.realpathSync(path.resolve(file));
-  const root = fs.realpathSync(ROOT);
-  const privateDirs = [homeDir(), DEFAULT_HOME, LEGACY_HOME, path.join(ROOT, "state")]
-    .filter((d) => fs.existsSync(d))
-    .map((d) => fs.realpathSync(d))
-    .filter((d) => d !== root); // home = gốc repo (cách cũ) -> chỉ chặn state/, không chặn cả repo
-  const inPrivate = privateDirs.some((d) => p === d || p.startsWith(d + path.sep));
-  if (/^\.env/.test(path.basename(p)) || inPrivate) {
-    throw new Error(`Không đăng nội dung file ${p}: file chứa secret / dữ liệu riêng`);
-  }
-  return p;
 }
 
 const short = (d: string | null | undefined) => (d ? d.slice(0, 10) : "-");
