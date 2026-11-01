@@ -1,5 +1,5 @@
 ---
-description: Work with Backlog (read/write many spaces, sync) via bl and bl sync
+description: Work with Backlog (read/write many spaces, sync) via backlog-bridge and backlog-bridge sync
 alwaysApply: true
 ---
 

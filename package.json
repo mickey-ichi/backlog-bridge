@@ -20,7 +20,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "bl": "bin/bl"
+    "backlog-bridge": "bin/backlog-bridge"
   },
   "files": [
     "bin",
@@ -39,10 +39,10 @@
   "scripts": {
     "sync": "node src/sync.ts",
     "dry-run": "node src/sync.ts --dry-run",
-    "bl": "node src/bl.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "test": "node --test \"test/*.test.ts\""
+    "test": "node --test \"test/*.test.ts\"",
+    "cli": "node src/cli.ts"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",

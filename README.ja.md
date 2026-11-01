@@ -4,7 +4,7 @@
 
 **複数の [Backlog](https://backlog.com)（Nulab）スペースを同時に扱う**ためのブリッジです。人にも AI エージェントにも使えます。
 
-- **`bl`** — 接続済みのどのスペースでも、課題・コメント・検索・アクティビティを 1 つの CLI で読み書きできます。
+- **`backlog-bridge`** — 接続済みのどのスペースでも、課題・コメント・検索・アクティビティを 1 つの CLI で読み書きできます。
   Backlog の URL を貼るだけで、対応するスペースと API キーを自動で選びます。
 - **`sync`** — 2 つの Backlog プロジェクト間の一方向同期（例：お客様の Backlog ↔ 社内の Backlog）。
 - **エージェント対応** — Claude Code・Codex・Cursor 向けのスキルを同梱（`AGENTS.md`、`.agents/skills/`）。
@@ -20,7 +20,7 @@
 
 ```bash
 npm install -g --install-links github:mickey-ichi/backlog-bridge
-bl setup
+backlog-bridge setup
 ```
 
 `--install-links` は、npm 10 が一時的な git クローンへのリンクではなくパッケージ本体をコピーするために必要です。
@@ -29,19 +29,19 @@ bl setup
 
 ```bash
 git clone https://github.com/mickey-ichi/backlog-bridge.git ~/.backlog-bridge
-~/.backlog-bridge/bin/bl setup        # ~/.local/bin/bl を作成
+~/.backlog-bridge/bin/backlog-bridge setup        # ~/.local/bin/backlog-bridge を作成
 ```
 
-`bl setup` は Claude Code（`~/.claude/skills`）、Codex と Cursor（`~/.agents/skills`、`~/.codex/skills`）向けの
+`backlog-bridge setup` は Claude Code（`~/.claude/skills`）、Codex と Cursor（`~/.agents/skills`、`~/.codex/skills`）向けの
 スキルをインストールし、テンプレートから `~/.config/backlog-bridge/.env`（chmod 600）を作成します。自分以外のものは
-上書きしません。`bl setup --uninstall` は自分が作ったリンクだけを削除します。
-既定の `node` が古くても、`bl` は Node 22.18 以上を自動で探します（PATH、nvm、Homebrew）。
+上書きしません。`backlog-bridge setup --uninstall` は自分が作ったリンクだけを削除します。
+既定の `node` が古くても、`backlog-bridge` は Node 22.18 以上を自動で探します（PATH、nvm、Homebrew）。
 
 その後 `~/.config/backlog-bridge/.env` にスペースごとに `<PREFIX>_SPACE` と `<PREFIX>_API_KEY` を記入して：
 
 ```bash
-bl spaces --check
-bl issue https://acme.backlog.jp/view/ACME-123
+backlog-bridge spaces --check
+backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API キーは **各スペースで** *個人設定 → API → 新しいAPIキーを発行* から取得します。
@@ -56,7 +56,7 @@ API キーは **各スペースで** *個人設定 → API → 新しいAPIキ�
 | `BACKLOG_BRIDGE_CONFIG` | `$BACKLOG_BRIDGE_HOME/config.json` | 別の設定ファイルを指定 |
 | `BACKLOG_BRIDGE_PROFILE` | 設定ファイルの `defaultProfile` | `sync` の既定プロファイル |
 
-`bl home` で現在使われているパスを確認できます。
+`backlog-bridge home` で現在使われているパスを確認できます。
 
 **スペース**は環境変数で指定します（ホームディレクトリの `.env`、またはシェルで export）。
 
@@ -71,21 +71,21 @@ ACME_API_KEY=...
 **プロファイル**（`sync` 用）はホームディレクトリの `config.json` に書きます。[`config.example.json`](config.example.json)
 を元にしてください。プロファイル内の相対パス（`state`、`pairFile`）はホームディレクトリ基準です。
 
-## `bl` — マルチスペース CLI
+## `backlog-bridge` — マルチスペース CLI
 
 ```bash
-bl setup [--uninstall] [--force]      # グローバルコマンドとスキルをインストール
-bl mcp [--config]                    # stdio の MCP サーバー。--config でホスト設定を表示
-bl home [--init]                     # 使用中のパス。--init でリポジトリの .env/config/state をコピー
-bl spaces [--check]                  # 接続済みスペース。--check で API を試行
-bl projects <space>
-bl issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
-bl comments <ref> [--count=20]
-bl search <space> <PROJECT> [--keyword=..] [--assignee=me|名前] [--open] [--count=50]
-bl activities <space> [--project=KEY] [--count=20]
-bl comment <ref> (--text=..|--file=path) [--yes]
-bl update <ref> status=<名前> assignee=<名前> dueDate=YYYY-MM-DD summary=.. [--yes]
-bl api <space> <METHOD> <path> [k=v ...] [--yes]   # Backlog API v2 の任意のエンドポイント
+backlog-bridge setup [--uninstall] [--force]                  # グローバルコマンドとスキルをインストール
+backlog-bridge mcp [--config]                                 # stdio の MCP サーバー。--config でホスト設定を表示
+backlog-bridge home [--init]                                  # 使用中のパス。--init でリポジトリの .env/config/state をコピー
+backlog-bridge spaces [--check]                               # 接続済みスペース。--check で API を試行
+backlog-bridge projects <space>
+backlog-bridge issue <ref>                                    # <ref> = URL | <space> <KEY> | <KEY>
+backlog-bridge comments <ref> [--count=20]
+backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|名前] [--open] [--count=50]
+backlog-bridge activities <space> [--project=KEY] [--count=20]
+backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+backlog-bridge update <ref> status=<名前> assignee=<名前> dueDate=YYYY-MM-DD summary=.. [--yes]
+backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]  # Backlog API v2 の任意のエンドポイント
 ```
 
 - プロジェクトキーがいずれかのプロファイルにあれば、`<KEY>` だけで指定できます。`--json` で生の JSON を出力します。
@@ -95,8 +95,8 @@ bl api <space> <METHOD> <path> [k=v ...] [--yes]   # Backlog API v2 の任意の
 ## `sync` — 2 プロジェクト間の一方向同期
 
 ```bash
-bl sync --list
-bl sync --profile=<名前> [フラグ]
+backlog-bridge sync --list
+backlog-bridge sync --profile=<名前> [フラグ]
 ```
 
 ### `mirror` モード — お客様 → 社内
@@ -162,24 +162,24 @@ bl sync --profile=<名前> [フラグ]
 | Codex | `AGENTS.md` |
 | Cursor | `.cursor/rules/backlog.mdc` → `AGENTS.md` とスキル |
 
-`bl setup` 後はスキルがグローバルにインストールされるため、このリポジトリに限らず**どのプロジェクトでも**エージェントが `bl` を使えます。
+`backlog-bridge setup` 後はスキルがグローバルにインストールされるため、このリポジトリに限らず**どのプロジェクトでも**エージェントが `backlog-bridge` を使えます。
 
 スキル：`backlog-connect`、`backlog-query`、`backlog-write`、`backlog-sync`。エージェントは書き込みの前に必ず
 プレビューを示し、お客様のスペースへ書き込む前に確認し、チケットの内容を指示ではなくデータとして扱います。
 
 ## MCP サーバー（Claude Desktop、Cursor など）
 
-シェルを使えないホスト（Claude Desktop や任意の MCP クライアント）向けに、`bl mcp` が stdio で MCP サーバーを起動します。
-`bl mcp --config` で Claude Desktop・Cursor・Claude Code・Codex 用の設定をそのまま貼れる形で表示します。例：
+シェルを使えないホスト（Claude Desktop や任意の MCP クライアント）向けに、`backlog-bridge mcp` が stdio で MCP サーバーを起動します。
+`backlog-bridge mcp --config` で Claude Desktop・Cursor・Claude Code・Codex 用の設定をそのまま貼れる形で表示します。例：
 
 ```json
-{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/bl", "args": ["mcp"] } } }
+{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/backlog-bridge", "args": ["mcp"] } } }
 ```
 
 ツール：`list_spaces`、`home_info`、`get_issue`、`get_comments`、`search_issues`、`list_activities`、`list_projects`、
 `api_get`（読み取りのみ）・`add_comment`、`update_issue`（`send: true` がない限りプレビューのみ）・`list_sync_profiles`、
 `sync_preview`（書き込みなし。実際の同期はターミナルで実行）。
-各ツールは `bl` CLI を呼び出すため同じ安全策が適用され、サーバーは必須ルールとユーザーのレビューモードもホストに渡します。
+各ツールは `backlog-bridge` CLI を呼び出すため同じ安全策が適用され、サーバーは必須ルールとユーザーのレビューモードもホストに渡します。
 
 ## お客様への送信内容のレビュー
 
@@ -191,17 +191,17 @@ bl sync --profile=<名前> [フラグ]
 | `translate` | 読めない人 | 自分の言語の文面だけをレビューし、承認後にエージェントが翻訳してそのまま送信 |
 
 `BACKLOG_BRIDGE_LANG`（既定 `vi`）と `BACKLOG_BRIDGE_CUSTOMER_LANG`（既定 `ja`）で 2 つの言語を指定します。
-`bl home` で現在のモードを確認でき、未設定の場合はエージェントが確認します。
+`backlog-bridge home` で現在のモードを確認でき、未設定の場合はエージェントが確認します。
 
 ## セキュリティ
 
-- API キーはホームディレクトリの `.env` にのみ置きます。他人が読める権限の場合、`bl home` / `bl spaces` が警告します。
+- API キーはホームディレクトリの `.env` にのみ置きます。他人が読める権限の場合、`backlog-bridge home` / `backlog-bridge spaces` が警告します。
   Backlog は API キーをクエリ `apiKey` で受け取るため、エラーにはメソッドとパスのみを出力します。
 - ホストとキーは常に同じ環境変数プレフィックスから取得するため、キーが別スペースのホストに送られることはありません。
 - 課題キーは `PROJECT-123` 形式のみ受け付けるため、細工したキーで書き込み先のエンドポイントを変えられません。
 - `comment --file` は `.env*`、ホームディレクトリ、`state/` を拒否します。プロンプトインジェクションを受けた
   エージェントでも秘密情報を投稿できません。
-- 書き込みは `--yes`（`bl`）／`--live`（`progress`）を付けるまでプレビューのみです。
+- 書き込みは `--yes`（`backlog-bridge`）／`--live`（`progress`）を付けるまでプレビューのみです。
 
 ## 開発
 
