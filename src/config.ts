@@ -4,7 +4,7 @@
 //   $BACKLOG_BRIDGE_HOME  >  ~/.config/backlog-bridge  >  ~/.config/backlog-sync (old name)  >  repo root
 // (a ~/.config directory is only picked if it already exists). The config file can be set separately with $BACKLOG_BRIDGE_CONFIG.
 // Old-name BACKLOG_SYNC_* variables are still accepted as a fallback so installs from before the rename don't break.
-// Without config.json, bl.ts still runs using only the <PREFIX>_SPACE / <PREFIX>_API_KEY environment variables.
+// Without config.json, the CLI still runs using only the <PREFIX>_SPACE / <PREFIX>_API_KEY environment variables.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";

@@ -1,23 +1,23 @@
 #!/usr/bin/env node
-// bl — CLI to read/write MANY Backlog spaces at once; shares .env + config.json with sync.
+// backlog-bridge — CLI to read/write MANY Backlog spaces at once; shares .env + config.json with sync.
 // Acts as a "bridge" for agents (Claude Code / Codex / Cursor / workspace): the official Backlog MCP
 // can attach only 1 space, while this CLI can call every configured space.
 //
-//   bl setup [--uninstall] [--force]                # install global bl command + skills for Claude/Codex/Cursor
-//   bl home [--init]                                # directory holding .env/config/state; --init copies from repo
-//   bl spaces [--check]                             # list spaces, --check makes a test API call
-//   bl projects <space>
-//   bl issue <ref>                                  # ref = URL | <space> <KEY> | <KEY>
-//   bl comments <ref> [--count=20]
-//   bl search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
-//   bl activities <space> [--project=KEY] [--count=20]
-//   bl comment <ref> (--text=..|--file=path) [--yes]
-//   bl update <ref> field=value ... [--yes]         # status=<name> assignee=<name> dueDate=.. summary=..
-//   bl api <space> <METHOD> <path> [k=v ...] [--yes]
-//   bl mcp [--config]                               # MCP server on stdio (Claude Desktop, Cursor, …); --config prints setup
-//   bl sync [--list | --profile=<name> ...]         # sync by profile (src/sync.ts)
+//   backlog-bridge setup [--uninstall] [--force]         # install global backlog-bridge command + skills for Claude/Codex/Cursor
+//   backlog-bridge home [--init]                         # directory holding .env/config/state; --init copies from repo
+//   backlog-bridge spaces [--check]                      # list spaces, --check makes a test API call
+//   backlog-bridge projects <space>
+//   backlog-bridge issue <ref>                           # ref = URL | <space> <KEY> | <KEY>
+//   backlog-bridge comments <ref> [--count=20]
+//   backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
+//   backlog-bridge activities <space> [--project=KEY] [--count=20]
+//   backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+//   backlog-bridge update <ref> field=value ... [--yes]  # status=<name> assignee=<name> dueDate=.. summary=..
+//   backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]
+//   backlog-bridge mcp [--config]                        # MCP server on stdio (Claude Desktop, Cursor, …); --config prints setup
+//   backlog-bridge sync [--list | --profile=<name> ...]  # sync by profile (src/sync.ts)
 //
-// Not installed globally? Call directly: node src/bl.ts <command>  /  node src/sync.ts.
+// Not installed globally? Call directly: node src/cli.ts <command>  /  node src/sync.ts.
 // Every WRITE command only prints the planned request by default; add --yes to actually send it.
 // --json: print raw JSON instead of the condensed form.
 import fs from "node:fs";
@@ -126,13 +126,15 @@ async function findUser(bl, projectKey, name) {
     }
     return hits[0];
 }
-// --- bl setup: global install ------------------------------------------------------------
+// --- backlog-bridge setup: global install ------------------------------------------------------------
 // Canonical skills live in ~/.agents/skills (Agent Skills standard: read by Codex + Cursor), then are
 // symlinked into ~/.claude/skills (Claude Code) and ~/.codex/skills (older Codex) if those directories exist.
 // Only touches symlinks pointing into this repo; any other file/directory with the same name is skipped (unless --force).
 const USER_HOME = os.homedir();
 const SKILL_ROOTS = [".agents/skills", ".claude/skills", ".codex/skills"].map((d) => path.join(USER_HOME, d));
 const BIN_DIR = path.join(USER_HOME, ".local", "bin");
+// The command used to be called `bl`; setup removes that old link when it points into this install.
+const LEGACY_COMMAND = "bl";
 function linkTarget(p) {
     try {
         return fs.lstatSync(p).isSymbolicLink() ? path.resolve(path.dirname(p), fs.readlinkSync(p)) : undefined;
@@ -178,10 +180,15 @@ function setupInstall(force) {
                 console.log("  " + placeLink(path.join(root, name), canonical, force));
         }
     }
-    // Installed via npm: npm already put bl on PATH; installed from a git clone: symlink into ~/.local/bin.
+    // Installed via npm: npm already put backlog-bridge on PATH; installed from a git clone: symlink into ~/.local/bin.
     if (!ROOT.includes(`${path.sep}node_modules${path.sep}`)) {
         console.log("Command:");
-        console.log("  " + placeLink(path.join(BIN_DIR, "bl"), path.join(ROOT, "bin", "bl"), force));
+        console.log("  " + placeLink(path.join(BIN_DIR, "backlog-bridge"), path.join(ROOT, "bin", "backlog-bridge"), force));
+        const legacy = path.join(BIN_DIR, LEGACY_COMMAND);
+        if (linkTarget(legacy)?.startsWith(ROOT + path.sep)) {
+            fs.unlinkSync(legacy);
+            console.log(`  - ${legacy} (old command name)`);
+        }
         const onPath = (process.env.PATH || "").split(path.delimiter).includes(BIN_DIR);
         if (!onPath)
             console.log(`  ! ${BIN_DIR} is not on PATH — add: export PATH="$HOME/.local/bin:$PATH"`);
@@ -200,12 +207,12 @@ function setupInstall(force) {
         console.log(`  + ${envFile} (sample — fill in <PREFIX>_SPACE / <PREFIX>_API_KEY for each space)`);
     }
     if (!exists(path.join(home, "config.json"))) {
-        console.log(`  (no config.json yet — only needed for bl sync; sample: ${path.join(ROOT, "config.example.json")})`);
+        console.log(`  (no config.json yet — only needed for backlog-bridge sync; sample: ${path.join(ROOT, "config.example.json")})`);
     }
-    console.log("\nDone. Verify with: bl spaces --check");
+    console.log("\nDone. Verify with: backlog-bridge spaces --check");
 }
 function setupUninstall() {
-    const links = [path.join(BIN_DIR, "bl")];
+    const links = [path.join(BIN_DIR, "backlog-bridge"), path.join(BIN_DIR, LEGACY_COMMAND)];
     for (const root of SKILL_ROOTS) {
         if (!fs.existsSync(root))
             continue;
@@ -233,10 +240,10 @@ function warnLooseEnv() {
     for (const p of looseEnvFiles())
         console.warn(`! ${p} is readable by others — run: chmod 600 "${p}"`);
 }
-// Setup snippets for MCP hosts; the command is this install's own bin/bl (finds a suitable Node itself).
+// Setup snippets for MCP hosts; the command is this install's own bin/backlog-bridge (finds a suitable Node itself).
 function mcpConfig() {
-    const bl = path.join(ROOT, "bin", "bl");
-    const json = JSON.stringify({ mcpServers: { "backlog-bridge": { command: bl, args: ["mcp"] } } }, null, 2);
+    const cmd = path.join(ROOT, "bin", "backlog-bridge");
+    const json = JSON.stringify({ mcpServers: { "backlog-bridge": { command: cmd, args: ["mcp"] } } }, null, 2);
     return [
         "Claude Desktop — ~/Library/Application Support/Claude/claude_desktop_config.json (merge into mcpServers):",
         json,
@@ -244,11 +251,11 @@ function mcpConfig() {
         "Cursor — ~/.cursor/mcp.json: same JSON as above.",
         "",
         "Claude Code:",
-        `  claude mcp add --scope user backlog-bridge -- "${bl}" mcp`,
+        `  claude mcp add --scope user backlog-bridge -- "${cmd}" mcp`,
         "",
         "Codex — ~/.codex/config.toml:",
         "  [mcp_servers.backlog-bridge]",
-        `  command = "${bl}"`,
+        `  command = "${cmd}"`,
         '  args = ["mcp"]',
     ].join("\n");
 }

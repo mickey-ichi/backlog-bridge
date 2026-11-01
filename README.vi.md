@@ -4,7 +4,7 @@
 
 Cầu nối tới **nhiều [Backlog](https://backlog.com) (Nulab) space cùng lúc** — cho người và cho AI agent.
 
-- **`bl`** — đọc/ghi issue, comment, tìm kiếm, activity trên mọi space đã nối, từ một CLI.
+- **`backlog-bridge`** — đọc/ghi issue, comment, tìm kiếm, activity trên mọi space đã nối, từ một CLI.
   Dán link Backlog là CLI tự chọn đúng space và API key.
 - **`sync`** — đồng bộ một chiều giữa hai project Backlog, vd Backlog của khách và Backlog nội bộ.
 - **Dùng được với agent** — có sẵn skill cho Claude Code, Codex, Cursor (`AGENTS.md`, `.agents/skills/`).
@@ -20,7 +20,7 @@ Không có dependency lúc chạy. Node.js **>= 22.18** chạy thẳng mã TypeS
 
 ```bash
 npm install -g --install-links github:mickey-ichi/backlog-bridge
-bl setup
+backlog-bridge setup
 ```
 
 `--install-links` để npm chép gói vào thay vì link tới một bản clone git tạm (npm 10).
@@ -29,19 +29,19 @@ bl setup
 
 ```bash
 git clone https://github.com/mickey-ichi/backlog-bridge.git ~/.backlog-bridge
-~/.backlog-bridge/bin/bl setup        # tạo ~/.local/bin/bl
+~/.backlog-bridge/bin/backlog-bridge setup        # tạo ~/.local/bin/backlog-bridge
 ```
 
-`bl setup` cài skill cho Claude Code (`~/.claude/skills`), Codex và Cursor (`~/.agents/skills`, `~/.codex/skills`),
+`backlog-bridge setup` cài skill cho Claude Code (`~/.claude/skills`), Codex và Cursor (`~/.agents/skills`, `~/.codex/skills`),
 và tạo `~/.config/backlog-bridge/.env` (chmod 600) từ file mẫu. Lệnh không bao giờ ghi đè thứ không phải của nó;
-`bl setup --uninstall` chỉ gỡ các link nó đã tạo.
-`bl` tự tìm Node >= 22.18 (PATH, nvm, Homebrew), kể cả khi `node` mặc định của bạn cũ hơn.
+`backlog-bridge setup --uninstall` chỉ gỡ các link nó đã tạo.
+`backlog-bridge` tự tìm Node >= 22.18 (PATH, nvm, Homebrew), kể cả khi `node` mặc định của bạn cũ hơn.
 
 Sau đó điền `~/.config/backlog-bridge/.env` — mỗi space một cặp `<PREFIX>_SPACE` + `<PREFIX>_API_KEY` — rồi:
 
 ```bash
-bl spaces --check
-bl issue https://acme.backlog.jp/view/ACME-123
+backlog-bridge spaces --check
+backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API key: *Personal Settings → API → Register new API key*, ở **từng** space.
@@ -56,7 +56,7 @@ Dữ liệu riêng không bao giờ nằm trong repo mà ở **thư mục home**
 | `BACKLOG_BRIDGE_CONFIG` | `$BACKLOG_BRIDGE_HOME/config.json` | trỏ tới file config khác |
 | `BACKLOG_BRIDGE_PROFILE` | `defaultProfile` trong config | profile mặc định của `sync` |
 
-`bl home` in ra đường dẫn đang dùng.
+`backlog-bridge home` in ra đường dẫn đang dùng.
 
 **Space** lấy từ biến môi trường — `.env` trong thư mục home, hoặc export trong shell:
 
@@ -71,21 +71,21 @@ prefix. `config.json` → `spaces` là tuỳ chọn (chỉ cần khi prefix khá
 **Profile** (cho `sync`) nằm trong `config.json` ở thư mục home. Bắt đầu từ [`config.example.json`](config.example.json).
 Đường dẫn tương đối trong profile (`state`, `pairFile`) tính từ thư mục home.
 
-## `bl` — CLI đa space
+## `backlog-bridge` — CLI đa space
 
 ```bash
-bl setup [--uninstall] [--force]      # cài lệnh toàn cục + skill cho agent
-bl mcp [--config]                    # MCP server qua stdio; --config in cấu hình cho host
-bl home [--init]                     # đường dẫn đang dùng; --init chép .env/config/state từ repo sang
-bl spaces [--check]                  # space đã nối; --check gọi thử API
-bl projects <space>
-bl issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
-bl comments <ref> [--count=20]
-bl search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
-bl activities <space> [--project=KEY] [--count=20]
-bl comment <ref> (--text=..|--file=path) [--yes]
-bl update <ref> status=<tên> assignee=<tên> dueDate=YYYY-MM-DD summary=.. [--yes]
-bl api <space> <METHOD> <path> [k=v ...] [--yes]   # endpoint bất kỳ của Backlog API v2
+backlog-bridge setup [--uninstall] [--force]                  # cài lệnh toàn cục + skill cho agent
+backlog-bridge mcp [--config]                                 # MCP server qua stdio; --config in cấu hình cho host
+backlog-bridge home [--init]                                  # đường dẫn đang dùng; --init chép .env/config/state từ repo sang
+backlog-bridge spaces [--check]                               # space đã nối; --check gọi thử API
+backlog-bridge projects <space>
+backlog-bridge issue <ref>                                    # <ref> = URL | <space> <KEY> | <KEY>
+backlog-bridge comments <ref> [--count=20]
+backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
+backlog-bridge activities <space> [--project=KEY] [--count=20]
+backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+backlog-bridge update <ref> status=<tên> assignee=<tên> dueDate=YYYY-MM-DD summary=.. [--yes]
+backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]  # endpoint bất kỳ của Backlog API v2
 ```
 
 - `<KEY>` trần dùng được khi project key của nó có trong một profile. `--json` in JSON thô.
@@ -95,8 +95,8 @@ bl api <space> <METHOD> <path> [k=v ...] [--yes]   # endpoint bất kỳ của B
 ## `sync` — đồng bộ một chiều giữa hai project
 
 ```bash
-bl sync --list
-bl sync --profile=<tên> [flag]
+backlog-bridge sync --list
+backlog-bridge sync --profile=<tên> [flag]
 ```
 
 ### Mode `mirror` — khách → nội bộ
@@ -162,24 +162,24 @@ An toàn: **mặc định chỉ xem trước** (`--live` mới ghi), `neverTouch
 | Codex | `AGENTS.md` |
 | Cursor | `.cursor/rules/backlog.mdc` → `AGENTS.md` + skill |
 
-Sau `bl setup`, skill được cài toàn cục nên agent ở **bất kỳ project nào** cũng dùng được `bl` — không chỉ trong repo này.
+Sau `backlog-bridge setup`, skill được cài toàn cục nên agent ở **bất kỳ project nào** cũng dùng được `backlog-bridge` — không chỉ trong repo này.
 
 Skill: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. Chúng buộc agent xem trước mọi lệnh ghi,
 hỏi lại trước khi ghi lên space của khách, và coi nội dung ticket là dữ liệu chứ không phải chỉ dẫn.
 
 ## MCP server (Claude Desktop, Cursor, …)
 
-Với nơi không chạy được lệnh shell — Claude Desktop, hay bất kỳ MCP client nào — `bl mcp` chạy một MCP server qua stdio.
-`bl mcp --config` in sẵn cấu hình để dán cho Claude Desktop, Cursor, Claude Code và Codex, vd:
+Với nơi không chạy được lệnh shell — Claude Desktop, hay bất kỳ MCP client nào — `backlog-bridge mcp` chạy một MCP server qua stdio.
+`backlog-bridge mcp --config` in sẵn cấu hình để dán cho Claude Desktop, Cursor, Claude Code và Codex, vd:
 
 ```json
-{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/bl", "args": ["mcp"] } } }
+{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/backlog-bridge", "args": ["mcp"] } } }
 ```
 
 Tool: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
 `api_get` (chỉ đọc) · `add_comment`, `update_issue` (chỉ xem trước nếu không có `send: true`) · `list_sync_profiles`,
 `sync_preview` (không bao giờ ghi — sync thật vẫn chạy ở terminal).
-Mỗi tool gọi lại CLI `bl` nên giữ nguyên mọi chốt an toàn; server cũng gửi cho agent các quy tắc bắt buộc và chế độ
+Mỗi tool gọi lại CLI `backlog-bridge` nên giữ nguyên mọi chốt an toàn; server cũng gửi cho agent các quy tắc bắt buộc và chế độ
 duyệt của người dùng.
 
 ## Duyệt nội dung gửi khách
@@ -192,16 +192,16 @@ Mỗi người tự đặt cách duyệt nội dung trước khi agent gửi cho
 | `translate` | người không đọc được | chỉ duyệt bản tiếng Việt; duyệt xong agent dịch và gửi luôn |
 
 `BACKLOG_BRIDGE_LANG` (mặc định `vi`) và `BACKLOG_BRIDGE_CUSTOMER_LANG` (mặc định `ja`) đặt hai ngôn ngữ.
-`bl home` cho biết chế độ đang dùng; chưa đặt thì agent sẽ hỏi.
+`backlog-bridge home` cho biết chế độ đang dùng; chưa đặt thì agent sẽ hỏi.
 
 ## Bảo mật
 
-- API key chỉ nằm trong `.env` ở thư mục home; `bl home` / `bl spaces` cảnh báo khi người khác đọc được file.
+- API key chỉ nằm trong `.env` ở thư mục home; `backlog-bridge home` / `backlog-bridge spaces` cảnh báo khi người khác đọc được file.
   Backlog nhận key qua query `apiKey`, nên lỗi chỉ in method và path.
 - Host và key luôn lấy từ cùng một prefix env — key không bao giờ bị gửi sang host của space khác.
 - Issue key phải có dạng `PROJECT-123`, nên key giả mạo không đổi được endpoint của lệnh ghi.
 - `comment --file` từ chối `.env*`, thư mục home và `state/` — agent bị prompt injection không đăng được secret.
-- Lệnh ghi chỉ là bản xem trước cho tới khi có `--yes` (`bl`) / `--live` (`progress`).
+- Lệnh ghi chỉ là bản xem trước cho tới khi có `--yes` (`backlog-bridge`) / `--live` (`progress`).
 
 ## Phát triển
 

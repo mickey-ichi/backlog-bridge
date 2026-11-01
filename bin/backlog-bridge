@@ -1,12 +1,12 @@
 #!/bin/sh
-# bl — global command of backlog-bridge. Runs from any directory:
-#   bl <bl command ...>     -> src/bl.ts
-#   bl sync [flag ...]      -> src/sync.ts
+# backlog-bridge — global command of backlog-bridge. Runs from any directory:
+#   backlog-bridge <backlog-bridge command ...>     -> src/cli.ts
+#   backlog-bridge sync [flag ...]      -> src/sync.ts
 # Finds a recent enough Node by itself (machines may have several via nvm; the default may be too old):
 #   $BACKLOG_BRIDGE_NODE > node on PATH > ~/.nvm/versions/node/* > Homebrew.
 set -e
 
-# Real path of the script (bl is usually invoked via a symlink in ~/.local/bin or npm bin).
+# Real path of the script (backlog-bridge is usually invoked via a symlink in ~/.local/bin or npm bin).
 self=$0
 while [ -L "$self" ]; do
   link=$(readlink "$self")
@@ -42,4 +42,4 @@ node=$(pick_node) || {
 }
 
 if [ "$1" = "sync" ]; then shift; exec "$node" "$entry_dir/sync.$ext" "$@"; fi
-exec "$node" "$entry_dir/bl.$ext" "$@"
+exec "$node" "$entry_dir/cli.$ext" "$@"

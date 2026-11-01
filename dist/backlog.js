@@ -64,7 +64,7 @@ export class BacklogClient {
         }
         return data;
     }
-    // Generic escape hatch for the multi-space CLI (src/bl.ts) — call any API v2 endpoint.
+    // Generic escape hatch for the multi-space CLI (src/cli.ts) — call any API v2 endpoint.
     request(method, path, opts) {
         return this.#request(method, path, opts);
     }
