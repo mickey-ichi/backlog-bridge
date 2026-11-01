@@ -14,6 +14,7 @@
 //   bl comment <ref> (--text=..|--file=path) [--yes]
 //   bl update <ref> field=value ... [--yes]         # status=<name> assignee=<name> dueDate=.. summary=..
 //   bl api <space> <METHOD> <path> [k=v ...] [--yes]
+//   bl mcp [--config]                               # MCP server on stdio (Claude Desktop, Cursor, …); --config prints setup
 //   bl sync [--list | --profile=<name> ...]         # sync by profile (src/sync.ts)
 //
 // Not installed globally? Call directly: node src/bl.ts <command>  /  node src/sync.ts.
@@ -230,7 +231,32 @@ function warnLooseEnv(): void {
   for (const p of looseEnvFiles()) console.warn(`! ${p} is readable by others — run: chmod 600 "${p}"`);
 }
 
+// Setup snippets for MCP hosts; the command is this install's own bin/bl (finds a suitable Node itself).
+function mcpConfig(): string {
+  const bl = path.join(ROOT, "bin", "bl");
+  const json = JSON.stringify({ mcpServers: { "backlog-bridge": { command: bl, args: ["mcp"] } } }, null, 2);
+  return [
+    "Claude Desktop — ~/Library/Application Support/Claude/claude_desktop_config.json (merge into mcpServers):",
+    json,
+    "",
+    "Cursor — ~/.cursor/mcp.json: same JSON as above.",
+    "",
+    "Claude Code:",
+    `  claude mcp add --scope user backlog-bridge -- "${bl}" mcp`,
+    "",
+    "Codex — ~/.codex/config.toml:",
+    "  [mcp_servers.backlog-bridge]",
+    `  command = "${bl}"`,
+    '  args = ["mcp"]',
+  ].join("\n");
+}
+
 const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
+  async mcp() {
+    if (hasFlag("config")) return console.log(mcpConfig());
+    (await import("./mcp.ts")).serve();
+  },
+
   async setup() {
     if (hasFlag("uninstall")) setupUninstall();
     else setupInstall(hasFlag("force"));

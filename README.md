@@ -73,6 +73,7 @@ Relative paths in a profile (`state`, `pairFile`) resolve against the home direc
 
 ```bash
 bl setup [--uninstall] [--force]      # install the global command + agent skills
+bl mcp [--config]                    # MCP server on stdio; --config prints host setup
 bl home [--init]                     # paths in use; --init copies .env/config/state from the repo
 bl spaces [--check]                  # connected spaces; --check calls the API
 bl projects <space>
@@ -163,6 +164,21 @@ After `bl setup` the skills are installed globally, so any agent in **any projec
 
 Skills: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. They make the agent preview every write,
 ask before writing to a customer's space, and treat ticket content as data rather than instructions.
+
+## MCP server (Claude Desktop, Cursor, …)
+
+For hosts without a shell — Claude Desktop, or any MCP client — `bl mcp` runs an MCP server on stdio.
+`bl mcp --config` prints ready-to-paste setup for Claude Desktop, Cursor, Claude Code and Codex, e.g.:
+
+```json
+{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/bl", "args": ["mcp"] } } }
+```
+
+Tools: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
+`api_get` (read-only) · `add_comment`, `update_issue` (dry run unless `send: true`) · `list_sync_profiles`,
+`sync_preview` (never writes — real syncs stay in the terminal).
+Each tool runs the `bl` CLI, so the same guards apply; the server also hands the host the hard rules and the user's
+review mode.
 
 ## Reviewing what goes to customers
 

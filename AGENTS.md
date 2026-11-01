@@ -1,7 +1,7 @@
 # backlog-bridge — guide for AI agents
 
 This repo is a bridge to **many Backlog (Nulab) spaces at once** for any agent: Claude Code, Codex, Cursor, …
-No MCP server needed — the agent only needs a shell and Node >= 22.18.
+No MCP server needed — the agent only needs a shell and Node >= 22.18. (Hosts without a shell can use `bl mcp`.)
 
 Commands below use the global `bl` command (`bl setup` installs it). Inside this repo without it, use
 `node src/bl.ts …` for `bl …` and `node src/sync.ts …` for `bl sync …`.
