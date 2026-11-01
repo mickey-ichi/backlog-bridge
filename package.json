@@ -42,7 +42,6 @@
     "bl": "node src/bl.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "prepare": "npm run build",
     "test": "node --test \"test/*.test.ts\""
   },
   "devDependencies": {

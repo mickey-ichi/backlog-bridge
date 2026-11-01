@@ -17,9 +17,11 @@ Zero runtime dependencies. Node.js **>= 22.18** runs the TypeScript sources dire
 **Option A — npm (from GitHub):**
 
 ```bash
-npm install -g github:mickey-ichi/backlog-bridge
+npm install -g --install-links github:mickey-ichi/backlog-bridge
 bl setup
 ```
+
+`--install-links` makes npm copy the package instead of linking to a temporary git clone (npm 10).
 
 **Option B — git clone** (update later with `git pull`):
 

@@ -19,9 +19,11 @@
 **方法 A — npm（GitHub から）：**
 
 ```bash
-npm install -g github:mickey-ichi/backlog-bridge
+npm install -g --install-links github:mickey-ichi/backlog-bridge
 bl setup
 ```
+
+`--install-links` は、npm 10 が一時的な git クローンへのリンクではなくパッケージ本体をコピーするために必要です。
 
 **方法 B — git clone**（更新は `git pull`）：
 
