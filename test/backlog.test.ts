@@ -56,3 +56,12 @@ test("getAllIssues: pages by 100 until a short page", async (t) => {
   assert.equal(all.length, 207);
   assert.deepEqual(offsets, ["0", "100", "200"]);
 });
+
+test("errors with a non-JSON body (HTML error page) are summarized, not dumped", async (t) => {
+  capture(t, 500, "<!DOCTYPE html><html><head><title>Error</title></head><body>…</body></html>");
+  await assert.rejects(client().getMyself(), (err: Error) => {
+    assert.match(err.message, /GET \/users\/myself -> 500: .*non-JSON response/);
+    assert.doesNotMatch(err.message, /DOCTYPE|<html/);
+    return true;
+  });
+});

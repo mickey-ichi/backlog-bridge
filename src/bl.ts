@@ -279,6 +279,10 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
 
   async spaces() {
     warnLooseEnv();
+    if (!Object.keys(SPACES).length) {
+      console.log(`No spaces yet — add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${envFiles()[0] || path.join(homeDir(), ".env")}`);
+      return;
+    }
     for (const [name, s] of Object.entries(SPACES)) {
       let line = `${name.padEnd(12)} ${s.missing || !s.space ? "(missing key)" : hostOf(s.space)}  env:${s.env}_*  [${s.from}]`;
       if (hasFlag("check") && !s.missing) {

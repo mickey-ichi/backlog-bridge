@@ -3,7 +3,7 @@
 !.env.example
 
 node_modules/
-dist/
+# dist/ is committed: installs from GitHub run it without a build step (CI checks it matches src/)
 
 # runtime data (keep it in $BACKLOG_BRIDGE_HOME/state)
 state/

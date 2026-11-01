@@ -59,7 +59,10 @@ export class BacklogClient {
     let data: any = null;
     try { data = text ? JSON.parse(text) : null; } catch { /* keep raw */ }
     if (!res.ok) {
-      const msg = data?.errors?.map((e: { message: string }) => e.message).join("; ") || text || res.statusText;
+      // Non-JSON bodies (HTML error pages for a wrong space name, proxies, ...) are summarized, never dumped.
+      const msg = data?.errors?.map((e: { message: string }) => e.message).join("; ")
+        || (data === null && text ? `${res.statusText || "error"} (non-JSON response — check the space name)` : text)
+        || res.statusText;
       throw new Error(`Backlog ${method} ${path} -> ${res.status}: ${msg}`);
     }
     return data as T;
