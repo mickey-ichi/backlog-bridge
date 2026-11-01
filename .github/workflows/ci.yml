@@ -28,6 +28,7 @@ jobs:
         run: |
           ./bin/bl | head -3
           ./bin/bl sync --list
+          ./bin/bl mcp --config
           node dist/bl.js home
           HOME="$RUNNER_TEMP/home" ./bin/bl setup
           HOME="$RUNNER_TEMP/home" ./bin/bl setup --uninstall

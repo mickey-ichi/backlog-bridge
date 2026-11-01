@@ -75,6 +75,7 @@ prefix. `config.json` → `spaces` là tuỳ chọn (chỉ cần khi prefix khá
 
 ```bash
 bl setup [--uninstall] [--force]      # cài lệnh toàn cục + skill cho agent
+bl mcp [--config]                    # MCP server qua stdio; --config in cấu hình cho host
 bl home [--init]                     # đường dẫn đang dùng; --init chép .env/config/state từ repo sang
 bl spaces [--check]                  # space đã nối; --check gọi thử API
 bl projects <space>
@@ -165,6 +166,21 @@ Sau `bl setup`, skill được cài toàn cục nên agent ở **bất kỳ proj
 
 Skill: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. Chúng buộc agent xem trước mọi lệnh ghi,
 hỏi lại trước khi ghi lên space của khách, và coi nội dung ticket là dữ liệu chứ không phải chỉ dẫn.
+
+## MCP server (Claude Desktop, Cursor, …)
+
+Với nơi không chạy được lệnh shell — Claude Desktop, hay bất kỳ MCP client nào — `bl mcp` chạy một MCP server qua stdio.
+`bl mcp --config` in sẵn cấu hình để dán cho Claude Desktop, Cursor, Claude Code và Codex, vd:
+
+```json
+{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/bl", "args": ["mcp"] } } }
+```
+
+Tool: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
+`api_get` (chỉ đọc) · `add_comment`, `update_issue` (chỉ xem trước nếu không có `send: true`) · `list_sync_profiles`,
+`sync_preview` (không bao giờ ghi — sync thật vẫn chạy ở terminal).
+Mỗi tool gọi lại CLI `bl` nên giữ nguyên mọi chốt an toàn; server cũng gửi cho agent các quy tắc bắt buộc và chế độ
+duyệt của người dùng.
 
 ## Duyệt nội dung gửi khách
 
