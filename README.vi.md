@@ -19,9 +19,11 @@ Không có dependency lúc chạy. Node.js **>= 22.18** chạy thẳng mã TypeS
 **Cách A — npm (lấy từ GitHub):**
 
 ```bash
-npm install -g github:mickey-ichi/backlog-bridge
+npm install -g --install-links github:mickey-ichi/backlog-bridge
 bl setup
 ```
+
+`--install-links` để npm chép gói vào thay vì link tới một bản clone git tạm (npm 10).
 
 **Cách B — git clone** (cập nhật sau này bằng `git pull`):
 
