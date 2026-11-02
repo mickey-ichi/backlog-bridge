@@ -1,5 +1,7 @@
 # backlog-bridge
 
+[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge) [![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+
 [English](README.md) · [Tiếng Việt](README.vi.md) · **日本語**
 
 **複数の [Backlog](https://backlog.com)（Nulab）スペースを同時に扱う**ためのブリッジです。人にも AI エージェントにも使えます。
@@ -16,15 +18,15 @@
 
 ## インストール
 
-**方法 A — npm（GitHub から）：**
+**方法 A — npm：**
 
 ```bash
-npm install -g --install-links github:mickey-ichi/backlog-bridge
+npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-`--install-links` は、npm 10 が一時的な git クローンへのリンクではなくパッケージ本体をコピーするために必要です。
-リリースを固定するにはタグを付けます：`github:mickey-ichi/backlog-bridge#v0.1.1`。[CHANGELOG.md](CHANGELOG.md) を参照。
+GitHub から直接（特定のタグなど）：`npm install -g --install-links github:mickey-ichi/backlog-bridge#v0.1.1`
+（`--install-links` は npm 10 が一時クローンへのリンクではなく本体をコピーするため）。[CHANGELOG.md](CHANGELOG.md) を参照。
 
 **方法 B — git clone**（更新は `git pull`）：
 
@@ -47,7 +49,7 @@ backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 
 API キーは **各スペースで** *個人設定 → API → 新しいAPIキーを発行* から取得します。
 
-**更新：** 同じ `npm install -g …` を再実行（方法 A）、または `git pull`（方法 B）。
+**更新：** `npm install -g backlog-bridge@latest`（方法 A）、または `git pull`（方法 B）。
 **アンインストール：** `backlog-bridge setup --uninstall` の後、`npm uninstall -g backlog-bridge`（方法 A）または
 クローンを削除（方法 B）。`~/.config/backlog-bridge` のデータは残ります。
 

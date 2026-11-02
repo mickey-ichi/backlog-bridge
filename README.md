@@ -1,5 +1,7 @@
 # backlog-bridge
 
+[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge) [![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+
 **English** · [Tiếng Việt](README.vi.md) · [日本語](README.ja.md)
 
 A bridge to **many [Backlog](https://backlog.com) (Nulab) spaces at once** — for people and for AI agents.
@@ -14,15 +16,15 @@ Zero runtime dependencies. Needs Node.js **>= 22.18** on macOS or Linux; on Wind
 
 ## Install
 
-**Option A — npm (from GitHub):**
+**Option A — npm:**
 
 ```bash
-npm install -g --install-links github:mickey-ichi/backlog-bridge
+npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-`--install-links` makes npm copy the package instead of linking to a temporary git clone (npm 10).
-Pin a release by appending the tag: `github:mickey-ichi/backlog-bridge#v0.1.1`. See [CHANGELOG.md](CHANGELOG.md).
+Straight from GitHub instead (e.g. a specific tag): `npm install -g --install-links github:mickey-ichi/backlog-bridge#v0.1.1`
+(`--install-links` makes npm 10 copy the package instead of linking to a temporary clone). See [CHANGELOG.md](CHANGELOG.md).
 
 **Option B — git clone** (update later with `git pull`):
 
@@ -45,7 +47,7 @@ backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 
 API keys: *Personal Settings → API → Register new API key*, on **each** space.
 
-**Update:** run the same `npm install -g …` command again (option A) or `git pull` (option B).
+**Update:** `npm install -g backlog-bridge@latest` (option A) or `git pull` (option B).
 **Uninstall:** `backlog-bridge setup --uninstall`, then `npm uninstall -g backlog-bridge` (option A) or delete the clone
 (option B). Your data in `~/.config/backlog-bridge` is kept.
 
