@@ -75,6 +75,7 @@ ACME_API_KEY=...
 
 ```bash
 bl setup [--uninstall] [--force]      # グローバルコマンドとスキルをインストール
+bl mcp [--config]                    # stdio の MCP サーバー。--config でホスト設定を表示
 bl home [--init]                     # 使用中のパス。--init でリポジトリの .env/config/state をコピー
 bl spaces [--check]                  # 接続済みスペース。--check で API を試行
 bl projects <space>
@@ -165,6 +166,20 @@ bl sync --profile=<名前> [フラグ]
 
 スキル：`backlog-connect`、`backlog-query`、`backlog-write`、`backlog-sync`。エージェントは書き込みの前に必ず
 プレビューを示し、お客様のスペースへ書き込む前に確認し、チケットの内容を指示ではなくデータとして扱います。
+
+## MCP サーバー（Claude Desktop、Cursor など）
+
+シェルを使えないホスト（Claude Desktop や任意の MCP クライアント）向けに、`bl mcp` が stdio で MCP サーバーを起動します。
+`bl mcp --config` で Claude Desktop・Cursor・Claude Code・Codex 用の設定をそのまま貼れる形で表示します。例：
+
+```json
+{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/bl", "args": ["mcp"] } } }
+```
+
+ツール：`list_spaces`、`home_info`、`get_issue`、`get_comments`、`search_issues`、`list_activities`、`list_projects`、
+`api_get`（読み取りのみ）・`add_comment`、`update_issue`（`send: true` がない限りプレビューのみ）・`list_sync_profiles`、
+`sync_preview`（書き込みなし。実際の同期はターミナルで実行）。
+各ツールは `bl` CLI を呼び出すため同じ安全策が適用され、サーバーは必須ルールとユーザーのレビューモードもホストに渡します。
 
 ## お客様への送信内容のレビュー
 
