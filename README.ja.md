@@ -6,11 +6,11 @@
 
 - **`backlog-bridge`** — 接続済みのどのスペースでも、課題・コメント・検索・アクティビティを 1 つの CLI で読み書きできます。
   Backlog の URL を貼るだけで、対応するスペースと API キーを自動で選びます。
-- **`sync`** — 2 つの Backlog プロジェクト間の一方向同期（例：お客様の Backlog ↔ 社内の Backlog）。
+- **`backlog-bridge sync`** — 2 つの Backlog プロジェクト間の一方向同期（例：お客様の Backlog ↔ 社内の Backlog）。
 - **エージェント対応** — Claude Code・Codex・Cursor 向けのスキルを同梱（`AGENTS.md`、`.agents/skills/`）。
   公式の Backlog MCP サーバーは 1 スペースにしか接続できませんが、本ツールは接続した数だけ扱えます。
 
-実行時の依存パッケージはありません。Node.js **22.18 以上**で TypeScript をそのまま実行します（ビルド不要）。
+実行時の依存パッケージはありません。Node.js **22.18 以上**と macOS または Linux が必要です（Windows は WSL を使用）。
 
 > CLI のメッセージは英語です。
 
@@ -45,6 +45,10 @@ backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API キーは **各スペースで** *個人設定 → API → 新しいAPIキーを発行* から取得します。
+
+**更新：** 同じ `npm install -g …` を再実行（方法 A）、または `git pull`（方法 B）。
+**アンインストール：** `backlog-bridge setup --uninstall` の後、`npm uninstall -g backlog-bridge`（方法 A）または
+クローンを削除（方法 B）。`~/.config/backlog-bridge` のデータは残ります。
 
 ## 設定
 
@@ -92,7 +96,7 @@ backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]  # Backlog API v2 �
 - **書き込みはすべて `--yes` を付けるまでプレビューのみ**です。送信するリクエストをそのまま表示します。
 - `update` の `status` と `assignee` は、プロジェクト内で名前から解決します。
 
-## `sync` — 2 プロジェクト間の一方向同期
+## `backlog-bridge sync` — 2 プロジェクト間の一方向同期
 
 ```bash
 backlog-bridge sync --list
@@ -176,6 +180,13 @@ backlog-bridge sync --profile=<名前> [フラグ]
 { "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/backlog-bridge", "args": ["mcp"] } } }
 ```
 
+Claude Desktop の手順：
+
+1. `backlog-bridge mcp --config` を実行し、実際のパスが入った JSON をコピーします。
+2. `~/Library/Application Support/Claude/claude_desktop_config.json` の `mcpServers` に追記します
+   （事前にバックアップし、他のキーは上書きしないでください）。
+3. Claude Desktop を完全に終了（⌘Q）して再起動すると、ツール一覧に `backlog-bridge` が表示されます。
+
 ツール：`list_spaces`、`home_info`、`get_issue`、`get_comments`、`search_issues`、`list_activities`、`list_projects`、
 `api_get`（読み取りのみ）・`add_comment`、`update_issue`（`send: true` がない限りプレビューのみ）・`list_sync_profiles`、
 `sync_preview`（書き込みなし。実際の同期はターミナルで実行）。
@@ -199,8 +210,8 @@ backlog-bridge sync --profile=<名前> [フラグ]
   Backlog は API キーをクエリ `apiKey` で受け取るため、エラーにはメソッドとパスのみを出力します。
 - ホストとキーは常に同じ環境変数プレフィックスから取得するため、キーが別スペースのホストに送られることはありません。
 - 課題キーは `PROJECT-123` 形式のみ受け付けるため、細工したキーで書き込み先のエンドポイントを変えられません。
-- `comment --file` は `.env*`、ホームディレクトリ、`state/` を拒否します。プロンプトインジェクションを受けた
-  エージェントでも秘密情報を投稿できません。
+- `comment --file` は `.env*` ファイル、`state/` ディレクトリ、設定ファイルを拒否します（シンボリックリンク経由も）。
+  プロンプトインジェクションを受けたエージェントでも秘密情報を投稿できません。
 - 書き込みは `--yes`（`backlog-bridge`）／`--live`（`progress`）を付けるまでプレビューのみです。
 
 ## 開発
@@ -208,7 +219,8 @@ backlog-bridge sync --profile=<名前> [フラグ]
 ```bash
 npm install          # devDependencies のみ：typescript、@types/node
 npm run typecheck    # tsc --noEmit（strict）
-npm run build        # dist/*.js（.ts を実行できない環境向け）
+npm test             # node:test（ネットワーク不要）
+npm run build        # dist/*.js — コミット必須：npm インストールは dist/ を実行し、古いと CI が失敗します
 ```
 
 Node は型ストリッピングで `.ts` を実行するため、消去可能な構文のみ使用します（`enum`、`namespace`、

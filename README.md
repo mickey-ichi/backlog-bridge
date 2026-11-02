@@ -6,11 +6,11 @@ A bridge to **many [Backlog](https://backlog.com) (Nulab) spaces at once** — f
 
 - **`backlog-bridge`** — read and write issues, comments, search and activity on any connected space, from one CLI.
   Paste a Backlog URL and it picks the right space and API key.
-- **`sync`** — one-way sync between two Backlog projects, e.g. a customer's Backlog and your internal one.
+- **`backlog-bridge sync`** — one-way sync between two Backlog projects, e.g. a customer's Backlog and your internal one.
 - **Agent-ready** — ships skills for Claude Code, Codex and Cursor (`AGENTS.md`, `.agents/skills/`).
   The official Backlog MCP server binds to a single space; this works with as many as you connect.
 
-Zero runtime dependencies. Node.js **>= 22.18** runs the TypeScript sources directly — no build step.
+Zero runtime dependencies. Needs Node.js **>= 22.18** and macOS or Linux (on Windows, use WSL).
 
 ## Install
 
@@ -43,6 +43,10 @@ backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API keys: *Personal Settings → API → Register new API key*, on **each** space.
+
+**Update:** run the same `npm install -g …` command again (option A) or `git pull` (option B).
+**Uninstall:** `backlog-bridge setup --uninstall`, then `npm uninstall -g backlog-bridge` (option A) or delete the clone
+(option B). Your data in `~/.config/backlog-bridge` is kept.
 
 ## Configuration
 
@@ -90,7 +94,7 @@ backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]  # any Backlog API 
 - **Every write is a dry run until you add `--yes`.** It prints the exact request first.
 - `update` resolves `status` and `assignee` by name inside the project.
 
-## `sync` — one-way sync between two projects
+## `backlog-bridge sync` — one-way sync between two projects
 
 ```bash
 backlog-bridge sync --list
@@ -174,6 +178,13 @@ For hosts without a shell — Claude Desktop, or any MCP client — `backlog-bri
 { "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/backlog-bridge", "args": ["mcp"] } } }
 ```
 
+Claude Desktop, step by step:
+
+1. `backlog-bridge mcp --config` and copy the JSON with your real path.
+2. Merge it into `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json`
+   (keep a backup; don't overwrite other keys).
+3. Quit Claude Desktop completely (⌘Q) and open it again — `backlog-bridge` appears among the tools.
+
 Tools: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
 `api_get` (read-only) · `add_comment`, `update_issue` (dry run unless `send: true`) · `list_sync_profiles`,
 `sync_preview` (never writes — real syncs stay in the terminal).
@@ -198,7 +209,8 @@ Each person sets how they review text before an agent sends it to a customer, in
   Backlog takes the key as the `apiKey` query parameter, so errors only ever print method and path.
 - Host and key always come from the same env prefix — a key is never sent to another space's host.
 - Issue keys must look like `PROJECT-123`, so a crafted key can't redirect a write to another endpoint.
-- `comment --file` refuses `.env*`, the home directory and `state/` — a prompt-injected agent can't post secrets.
+- `comment --file` refuses `.env*` files, `state/` directories and the config file (also through symlinks) — a
+  prompt-injected agent can't post secrets.
 - Writes are dry runs until `--yes` (`backlog-bridge`) / `--live` (`progress`).
 
 ## Development
@@ -206,7 +218,8 @@ Each person sets how they review text before an agent sends it to a customer, in
 ```bash
 npm install          # devDependencies only: typescript, @types/node
 npm run typecheck    # tsc --noEmit, strict
-npm run build        # dist/*.js, for environments that can't run .ts
+npm test             # node:test, no network
+npm run build        # dist/*.js — commit it: npm installs run dist/, and CI fails if it is stale
 ```
 
 Node runs `.ts` via type stripping, so only erasable syntax is allowed (no `enum`, `namespace`, parameter
