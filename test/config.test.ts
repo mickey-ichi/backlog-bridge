@@ -74,3 +74,11 @@ test("reviewPrefs: modes, defaults and invalid values", async () => {
   process.env.BACKLOG_BRIDGE_CUSTOMER_LANG = "ko";
   assert.deepEqual([reviewPrefs().lang, reviewPrefs().customerLang], ["en", "ko"]);
 });
+
+test("homeDir: never the install directory unless it holds legacy data (.env / config.json)", () => {
+  delete process.env.BACKLOG_BRIDGE_HOME;
+  delete process.env.BACKLOG_SYNC_HOME;
+  const hasLegacy = [".env", "config.json"].some((f) => fs.existsSync(path.join(ROOT, f)));
+  if (!hasLegacy) assert.notEqual(homeDir(), ROOT);
+  assert.ok(path.isAbsolute(homeDir()));
+});

@@ -22,7 +22,7 @@ backlog-bridge setup
 ```
 
 `--install-links` makes npm copy the package instead of linking to a temporary git clone (npm 10).
-Pin a release by appending the tag: `github:mickey-ichi/backlog-bridge#v0.1.0`. See [CHANGELOG.md](CHANGELOG.md).
+Pin a release by appending the tag: `github:mickey-ichi/backlog-bridge#v0.1.1`. See [CHANGELOG.md](CHANGELOG.md).
 
 **Option B — git clone** (update later with `git pull`):
 

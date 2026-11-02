@@ -24,7 +24,7 @@ backlog-bridge setup
 ```
 
 `--install-links` để npm chép gói vào thay vì link tới một bản clone git tạm (npm 10).
-Cài cố định một bản release bằng cách thêm tag: `github:mickey-ichi/backlog-bridge#v0.1.0`. Xem [CHANGELOG.md](CHANGELOG.md).
+Cài cố định một bản release bằng cách thêm tag: `github:mickey-ichi/backlog-bridge#v0.1.1`. Xem [CHANGELOG.md](CHANGELOG.md).
 
 **Cách B — git clone** (cập nhật sau này bằng `git pull`):
 

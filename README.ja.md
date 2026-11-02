@@ -24,7 +24,7 @@ backlog-bridge setup
 ```
 
 `--install-links` は、npm 10 が一時的な git クローンへのリンクではなくパッケージ本体をコピーするために必要です。
-リリースを固定するにはタグを付けます：`github:mickey-ichi/backlog-bridge#v0.1.0`。[CHANGELOG.md](CHANGELOG.md) を参照。
+リリースを固定するにはタグを付けます：`github:mickey-ichi/backlog-bridge#v0.1.1`。[CHANGELOG.md](CHANGELOG.md) を参照。
 
 **方法 B — git clone**（更新は `git pull`）：
 

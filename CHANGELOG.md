@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1
+
+- Fix: before `backlog-bridge setup` had run, an npm install used its own install directory as the home directory,
+  so `spaces` suggested putting `.env` inside the npm package (lost on every update). The home directory is now
+  always `~/.config/backlog-bridge` unless `BACKLOG_BRIDGE_HOME` is set (or a git clone still holds data the old way).
+- `spaces` with no `.env` yet tells you to run `backlog-bridge setup` first.
+
 ## 0.1.0 — first release
 
 **CLI — `backlog-bridge`**
