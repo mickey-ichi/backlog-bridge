@@ -15,7 +15,8 @@
 //   backlog-bridge update <ref> field=value ... [--yes]  # status=<name> assignee=<name> dueDate=.. summary=..
 //   backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]
 //   backlog-bridge mcp [--config]                        # MCP server on stdio (Claude Desktop, Cursor, …); --config prints setup
-//   backlog-bridge sync [--list | --profile=<name> ...]  # sync by profile (src/sync.ts)
+//   backlog-bridge sync [--list | --profile=<name> ...]
+//   backlog-bridge --version  # sync by profile (src/sync.ts)
 //
 // Not installed globally? Call directly: node src/cli.ts <command>  /  node src/sync.ts.
 // Every WRITE command only prints the planned request by default; add --yes to actually send it.
@@ -23,7 +24,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { ROOT, DEFAULT_HOME, LEGACY_HOME, setting, reviewPrefs, homeDir, configPath, envFiles, looseEnvFiles, loadEnv, loadConfig, allSpaces, hostOf, hasFlag, argValue, } from "./config.js";
+import { ROOT, DEFAULT_HOME, LEGACY_HOME, VERSION, setting, reviewPrefs, homeDir, configPath, envFiles, looseEnvFiles, loadEnv, loadConfig, allSpaces, hostOf, hasFlag, argValue, } from "./config.js";
 import { BacklogClient } from "./backlog.js";
 import { checkKey, safeCommentFile } from "./guards.js";
 loadEnv();
@@ -162,7 +163,9 @@ function placeLink(link, target, force) {
         fs.rmSync(link, { recursive: !current, force: true });
     }
     fs.mkdirSync(path.dirname(link), { recursive: true });
-    fs.symlinkSync(target, link);
+    // Windows: directory junctions need no admin rights / developer mode (unlike symlinks).
+    const isDir = fs.statSync(target).isDirectory();
+    fs.symlinkSync(target, link, process.platform === "win32" && isDir ? "junction" : undefined);
     return `+ ${link} -> ${target}`;
 }
 function setupInstall(force) {
@@ -181,7 +184,10 @@ function setupInstall(force) {
         }
     }
     // Installed via npm: npm already put backlog-bridge on PATH; installed from a git clone: symlink into ~/.local/bin.
-    if (!ROOT.includes(`${path.sep}node_modules${path.sep}`)) {
+    if (process.platform === "win32") {
+        console.log("Command:\n  (Windows: install with npm — `npm install -g --install-links github:mickey-ichi/backlog-bridge` puts backlog-bridge on PATH)");
+    }
+    else if (!ROOT.includes(`${path.sep}node_modules${path.sep}`)) {
         console.log("Command:");
         console.log("  " + placeLink(path.join(BIN_DIR, "backlog-bridge"), path.join(ROOT, "bin", "backlog-bridge"), force));
         const legacy = path.join(BIN_DIR, LEGACY_COMMAND);
@@ -242,8 +248,11 @@ function warnLooseEnv() {
 }
 // Setup snippets for MCP hosts; the command is this install's own bin/backlog-bridge (finds a suitable Node itself).
 function mcpConfig() {
-    const cmd = path.join(ROOT, "bin", "backlog-bridge");
-    const json = JSON.stringify({ mcpServers: { "backlog-bridge": { command: cmd, args: ["mcp"] } } }, null, 2);
+    // POSIX: the shell launcher (finds a suitable Node itself). Windows: node + the JS launcher.
+    const win = process.platform === "win32";
+    const cmd = win ? process.execPath : path.join(ROOT, "bin", "backlog-bridge");
+    const args = win ? [path.join(ROOT, "bin", "backlog-bridge.js"), "mcp"] : ["mcp"];
+    const json = JSON.stringify({ mcpServers: { "backlog-bridge": { command: cmd, args } } }, null, 2);
     return [
         "Claude Desktop — ~/Library/Application Support/Claude/claude_desktop_config.json (merge into mcpServers):",
         json,
@@ -251,12 +260,12 @@ function mcpConfig() {
         "Cursor — ~/.cursor/mcp.json: same JSON as above.",
         "",
         "Claude Code:",
-        `  claude mcp add --scope user backlog-bridge -- "${cmd}" mcp`,
+        `  claude mcp add --scope user backlog-bridge -- ${[cmd, ...args].map((a) => `"${a}"`).join(" ")}`,
         "",
         "Codex — ~/.codex/config.toml:",
         "  [mcp_servers.backlog-bridge]",
         `  command = "${cmd}"`,
-        '  args = ["mcp"]',
+        `  args = ${JSON.stringify(args)}`,
     ].join("\n");
 }
 const COMMANDS = {
@@ -433,6 +442,10 @@ const COMMANDS = {
 };
 async function main() {
     const [cmd, ...args] = positional;
+    if (hasFlag("version") || cmd === "-v" || cmd === "version") {
+        console.log(`backlog-bridge ${VERSION}`);
+        return;
+    }
     const run = cmd ? COMMANDS[cmd] : undefined;
     if (!run) {
         const lines = fs.readFileSync(import.meta.filename, "utf8").split("\n").slice(1);
