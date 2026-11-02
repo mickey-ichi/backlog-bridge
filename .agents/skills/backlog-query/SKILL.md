@@ -1,6 +1,6 @@
 ---
 name: backlog-query
-description: Read issues, comments, search results and activity across MANY Backlog spaces via the CLI bl. Use when the user pastes a Backlog link or issue key (e.g. https://acme.backlog.jp/view/ACME-123, DEV-42), asks "what's the status of this task", "find tasks assigned to X", "what did the customer comment today", or "compare the customer ticket with our internal one".
+description: Read issues, comments, search results and activity across MANY Backlog spaces via the backlog-bridge CLI. Use when the user pastes a Backlog link or issue key (e.g. https://acme.backlog.jp/view/ACME-123, DEV-42), asks "what's the status of this task", "find tasks assigned to X", "what did the customer comment today", or "compare the customer ticket with our internal one".
 ---
 
 # Read Backlog across spaces
