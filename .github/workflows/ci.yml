@@ -26,9 +26,9 @@ jobs:
           fi
       - name: Smoke test
         run: |
-          ./bin/bl | head -3
-          ./bin/bl sync --list
-          ./bin/bl mcp --config
-          node dist/bl.js home
-          HOME="$RUNNER_TEMP/home" ./bin/bl setup
-          HOME="$RUNNER_TEMP/home" ./bin/bl setup --uninstall
+          ./bin/backlog-bridge | head -3
+          ./bin/backlog-bridge sync --list
+          ./bin/backlog-bridge mcp --config
+          node dist/cli.js home
+          HOME="$RUNNER_TEMP/home" ./bin/backlog-bridge setup
+          HOME="$RUNNER_TEMP/home" ./bin/backlog-bridge setup --uninstall

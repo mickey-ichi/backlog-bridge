@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-// Real stdio session against `bl mcp`, in an empty home with no spaces (no network needed).
+// Real stdio session against `backlog-bridge mcp`, in an empty home with no spaces (no network needed).
 let child: ChildProcessWithoutNullStreams;
 let nextId = 0;
 const waiters = new Map<number, (m: any) => void>();
@@ -21,7 +21,7 @@ const callTool = (name: string, args: unknown = {}) => rpc("tools/call", { name,
 
 before(() => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "bb-mcp-"));
-  child = spawn(process.execPath, [path.join(import.meta.dirname, "..", "src", "bl.ts"), "mcp"], {
+  child = spawn(process.execPath, [path.join(import.meta.dirname, "..", "src", "cli.ts"), "mcp"], {
     env: { PATH: process.env.PATH, HOME: home, BACKLOG_BRIDGE_HOME: home, BACKLOG_BRIDGE_REVIEW: "translate" },
   });
   let buf = "";

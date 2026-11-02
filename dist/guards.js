@@ -1,4 +1,4 @@
-// Shared safety checks for bl's write commands (kept separate so they can be tested).
+// Shared safety checks for the CLI's write commands (kept separate so they can be tested).
 import fs from "node:fs";
 import path from "node:path";
 import { ROOT, DEFAULT_HOME, LEGACY_HOME, homeDir, configPath } from "./config.js";

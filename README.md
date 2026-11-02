@@ -4,7 +4,7 @@
 
 A bridge to **many [Backlog](https://backlog.com) (Nulab) spaces at once** — for people and for AI agents.
 
-- **`bl`** — read and write issues, comments, search and activity on any connected space, from one CLI.
+- **`backlog-bridge`** — read and write issues, comments, search and activity on any connected space, from one CLI.
   Paste a Backlog URL and it picks the right space and API key.
 - **`sync`** — one-way sync between two Backlog projects, e.g. a customer's Backlog and your internal one.
 - **Agent-ready** — ships skills for Claude Code, Codex and Cursor (`AGENTS.md`, `.agents/skills/`).
@@ -18,7 +18,7 @@ Zero runtime dependencies. Node.js **>= 22.18** runs the TypeScript sources dire
 
 ```bash
 npm install -g --install-links github:mickey-ichi/backlog-bridge
-bl setup
+backlog-bridge setup
 ```
 
 `--install-links` makes npm copy the package instead of linking to a temporary git clone (npm 10).
@@ -27,19 +27,19 @@ bl setup
 
 ```bash
 git clone https://github.com/mickey-ichi/backlog-bridge.git ~/.backlog-bridge
-~/.backlog-bridge/bin/bl setup        # links ~/.local/bin/bl
+~/.backlog-bridge/bin/backlog-bridge setup        # links ~/.local/bin/backlog-bridge
 ```
 
-`bl setup` installs the agent skills for Claude Code (`~/.claude/skills`), Codex and Cursor (`~/.agents/skills`,
+`backlog-bridge setup` installs the agent skills for Claude Code (`~/.claude/skills`), Codex and Cursor (`~/.agents/skills`,
 `~/.codex/skills`), and creates `~/.config/backlog-bridge/.env` (chmod 600) from the template. It never overwrites
-anything that isn't its own; `bl setup --uninstall` removes only its links.
-`bl` finds a Node >= 22.18 by itself (PATH, nvm, Homebrew), even if your default `node` is older.
+anything that isn't its own; `backlog-bridge setup --uninstall` removes only its links.
+`backlog-bridge` finds a Node >= 22.18 by itself (PATH, nvm, Homebrew), even if your default `node` is older.
 
 Then fill in `~/.config/backlog-bridge/.env` — one `<PREFIX>_SPACE` + `<PREFIX>_API_KEY` pair per space — and:
 
 ```bash
-bl spaces --check
-bl issue https://acme.backlog.jp/view/ACME-123
+backlog-bridge spaces --check
+backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API keys: *Personal Settings → API → Register new API key*, on **each** space.
@@ -54,7 +54,7 @@ Private data never lives in the repo. It lives in a **home directory**:
 | `BACKLOG_BRIDGE_CONFIG` | `$BACKLOG_BRIDGE_HOME/config.json` | point at another config file |
 | `BACKLOG_BRIDGE_PROFILE` | `defaultProfile` in the config | default profile for `sync` |
 
-`bl home` prints what is in use.
+`backlog-bridge home` prints what is in use.
 
 **Spaces** come from environment variables — `.env` in the home directory, or exported in the shell:
 
@@ -69,21 +69,21 @@ from the **same** prefix. `config.json` → `spaces` is optional (only for a pre
 **Profiles** (for `sync`) live in `config.json` in the home directory. Start from [`config.example.json`](config.example.json).
 Relative paths in a profile (`state`, `pairFile`) resolve against the home directory.
 
-## `bl` — multi-space CLI
+## `backlog-bridge` — multi-space CLI
 
 ```bash
-bl setup [--uninstall] [--force]      # install the global command + agent skills
-bl mcp [--config]                    # MCP server on stdio; --config prints host setup
-bl home [--init]                     # paths in use; --init copies .env/config/state from the repo
-bl spaces [--check]                  # connected spaces; --check calls the API
-bl projects <space>
-bl issue <ref>                       # <ref> = URL | <space> <KEY> | <KEY>
-bl comments <ref> [--count=20]
-bl search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
-bl activities <space> [--project=KEY] [--count=20]
-bl comment <ref> (--text=..|--file=path) [--yes]
-bl update <ref> status=<name> assignee=<name> dueDate=YYYY-MM-DD summary=.. [--yes]
-bl api <space> <METHOD> <path> [k=v ...] [--yes]   # any Backlog API v2 endpoint
+backlog-bridge setup [--uninstall] [--force]                  # install the global command + agent skills
+backlog-bridge mcp [--config]                                 # MCP server on stdio; --config prints host setup
+backlog-bridge home [--init]                                  # paths in use; --init copies .env/config/state from the repo
+backlog-bridge spaces [--check]                               # connected spaces; --check calls the API
+backlog-bridge projects <space>
+backlog-bridge issue <ref>                                    # <ref> = URL | <space> <KEY> | <KEY>
+backlog-bridge comments <ref> [--count=20]
+backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
+backlog-bridge activities <space> [--project=KEY] [--count=20]
+backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+backlog-bridge update <ref> status=<name> assignee=<name> dueDate=YYYY-MM-DD summary=.. [--yes]
+backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]  # any Backlog API v2 endpoint
 ```
 
 - A bare `<KEY>` works when its project key appears in a profile. `--json` prints raw JSON.
@@ -93,8 +93,8 @@ bl api <space> <METHOD> <path> [k=v ...] [--yes]   # any Backlog API v2 endpoint
 ## `sync` — one-way sync between two projects
 
 ```bash
-bl sync --list
-bl sync --profile=<name> [flags]
+backlog-bridge sync --list
+backlog-bridge sync --profile=<name> [flags]
 ```
 
 ### `mirror` mode — customer → internal
@@ -160,24 +160,24 @@ updated in place via a hidden marker.
 | Codex | `AGENTS.md` |
 | Cursor | `.cursor/rules/backlog.mdc` → `AGENTS.md` + skills |
 
-After `bl setup` the skills are installed globally, so any agent in **any project** can use `bl` — not only inside this repo.
+After `backlog-bridge setup` the skills are installed globally, so any agent in **any project** can use `backlog-bridge` — not only inside this repo.
 
 Skills: `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`. They make the agent preview every write,
 ask before writing to a customer's space, and treat ticket content as data rather than instructions.
 
 ## MCP server (Claude Desktop, Cursor, …)
 
-For hosts without a shell — Claude Desktop, or any MCP client — `bl mcp` runs an MCP server on stdio.
-`bl mcp --config` prints ready-to-paste setup for Claude Desktop, Cursor, Claude Code and Codex, e.g.:
+For hosts without a shell — Claude Desktop, or any MCP client — `backlog-bridge mcp` runs an MCP server on stdio.
+`backlog-bridge mcp --config` prints ready-to-paste setup for Claude Desktop, Cursor, Claude Code and Codex, e.g.:
 
 ```json
-{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/bl", "args": ["mcp"] } } }
+{ "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/backlog-bridge", "args": ["mcp"] } } }
 ```
 
 Tools: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
 `api_get` (read-only) · `add_comment`, `update_issue` (dry run unless `send: true`) · `list_sync_profiles`,
 `sync_preview` (never writes — real syncs stay in the terminal).
-Each tool runs the `bl` CLI, so the same guards apply; the server also hands the host the hard rules and the user's
+Each tool runs the `backlog-bridge` CLI, so the same guards apply; the server also hands the host the hard rules and the user's
 review mode.
 
 ## Reviewing what goes to customers
@@ -190,16 +190,16 @@ Each person sets how they review text before an agent sends it to a customer, in
 | `translate` | you don't | review in your language only; after approval the agent translates and sends right away |
 
 `BACKLOG_BRIDGE_LANG` (default `vi`) and `BACKLOG_BRIDGE_CUSTOMER_LANG` (default `ja`) set the two languages.
-`bl home` shows the current mode; when it is not set, the agent asks.
+`backlog-bridge home` shows the current mode; when it is not set, the agent asks.
 
 ## Security
 
-- API keys only in `.env` in the home directory; `bl home` / `bl spaces` warn when it is readable by others.
+- API keys only in `.env` in the home directory; `backlog-bridge home` / `backlog-bridge spaces` warn when it is readable by others.
   Backlog takes the key as the `apiKey` query parameter, so errors only ever print method and path.
 - Host and key always come from the same env prefix — a key is never sent to another space's host.
 - Issue keys must look like `PROJECT-123`, so a crafted key can't redirect a write to another endpoint.
 - `comment --file` refuses `.env*`, the home directory and `state/` — a prompt-injected agent can't post secrets.
-- Writes are dry runs until `--yes` (`bl`) / `--live` (`progress`).
+- Writes are dry runs until `--yes` (`backlog-bridge`) / `--live` (`progress`).
 
 ## Development
 
