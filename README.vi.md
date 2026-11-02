@@ -6,11 +6,11 @@ Cầu nối tới **nhiều [Backlog](https://backlog.com) (Nulab) space cùng l
 
 - **`backlog-bridge`** — đọc/ghi issue, comment, tìm kiếm, activity trên mọi space đã nối, từ một CLI.
   Dán link Backlog là CLI tự chọn đúng space và API key.
-- **`sync`** — đồng bộ một chiều giữa hai project Backlog, vd Backlog của khách và Backlog nội bộ.
+- **`backlog-bridge sync`** — đồng bộ một chiều giữa hai project Backlog, vd Backlog của khách và Backlog nội bộ.
 - **Dùng được với agent** — có sẵn skill cho Claude Code, Codex, Cursor (`AGENTS.md`, `.agents/skills/`).
   MCP Backlog chính chủ chỉ gắn được một space; công cụ này dùng được với bao nhiêu space cũng được.
 
-Không có dependency lúc chạy. Node.js **>= 22.18** chạy thẳng mã TypeScript, không cần build.
+Không có dependency lúc chạy. Cần Node.js **>= 22.18** và macOS hoặc Linux (Windows thì dùng WSL).
 
 > Thông báo của CLI bằng tiếng Anh.
 
@@ -45,6 +45,10 @@ backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 ```
 
 API key: *Personal Settings → API → Register new API key*, ở **từng** space.
+
+**Cập nhật:** chạy lại đúng lệnh `npm install -g …` (cách A) hoặc `git pull` (cách B).
+**Gỡ cài:** `backlog-bridge setup --uninstall`, rồi `npm uninstall -g backlog-bridge` (cách A) hoặc xoá thư mục clone
+(cách B). Dữ liệu ở `~/.config/backlog-bridge` được giữ nguyên.
 
 ## Cấu hình
 
@@ -92,7 +96,7 @@ backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]  # endpoint bất k
 - **Mọi lệnh ghi chỉ là bản xem trước cho tới khi thêm `--yes`** — in ra đúng request sẽ gửi.
 - `update` tự tra `status` và `assignee` theo tên trong project.
 
-## `sync` — đồng bộ một chiều giữa hai project
+## `backlog-bridge sync` — đồng bộ một chiều giữa hai project
 
 ```bash
 backlog-bridge sync --list
@@ -176,6 +180,13 @@ Với nơi không chạy được lệnh shell — Claude Desktop, hay bất k�
 { "mcpServers": { "backlog-bridge": { "command": "/path/to/backlog-bridge/bin/backlog-bridge", "args": ["mcp"] } } }
 ```
 
+Claude Desktop, từng bước:
+
+1. Chạy `backlog-bridge mcp --config` và copy đoạn JSON có đường dẫn thật của bạn.
+2. Gộp vào `mcpServers` trong `~/Library/Application Support/Claude/claude_desktop_config.json`
+   (sao lưu trước; không ghi đè các key khác).
+3. Thoát hẳn Claude Desktop (⌘Q) rồi mở lại — `backlog-bridge` sẽ hiện trong danh sách tool.
+
 Tool: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
 `api_get` (chỉ đọc) · `add_comment`, `update_issue` (chỉ xem trước nếu không có `send: true`) · `list_sync_profiles`,
 `sync_preview` (không bao giờ ghi — sync thật vẫn chạy ở terminal).
@@ -200,7 +211,8 @@ Mỗi người tự đặt cách duyệt nội dung trước khi agent gửi cho
   Backlog nhận key qua query `apiKey`, nên lỗi chỉ in method và path.
 - Host và key luôn lấy từ cùng một prefix env — key không bao giờ bị gửi sang host của space khác.
 - Issue key phải có dạng `PROJECT-123`, nên key giả mạo không đổi được endpoint của lệnh ghi.
-- `comment --file` từ chối `.env*`, thư mục home và `state/` — agent bị prompt injection không đăng được secret.
+- `comment --file` từ chối file `.env*`, thư mục `state/` và file config (kể cả qua symlink) — agent bị prompt
+  injection không đăng được secret.
 - Lệnh ghi chỉ là bản xem trước cho tới khi có `--yes` (`backlog-bridge`) / `--live` (`progress`).
 
 ## Phát triển
@@ -208,7 +220,8 @@ Mỗi người tự đặt cách duyệt nội dung trước khi agent gửi cho
 ```bash
 npm install          # chỉ devDependencies: typescript, @types/node
 npm run typecheck    # tsc --noEmit, strict
-npm run build        # dist/*.js, cho môi trường không chạy được .ts
+npm test             # node:test, không cần mạng
+npm run build        # dist/*.js — phải commit: cài qua npm chạy dist/, CI báo lỗi nếu dist/ cũ
 ```
 
 Node chạy `.ts` bằng type stripping nên chỉ dùng cú pháp xoá được (không `enum`, `namespace`, parameter property);
