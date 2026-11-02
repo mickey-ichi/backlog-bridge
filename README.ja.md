@@ -10,7 +10,7 @@
 - **エージェント対応** — Claude Code・Codex・Cursor 向けのスキルを同梱（`AGENTS.md`、`.agents/skills/`）。
   公式の Backlog MCP サーバーは 1 スペースにしか接続できませんが、本ツールは接続した数だけ扱えます。
 
-実行時の依存パッケージはありません。Node.js **22.18 以上**と macOS または Linux が必要です（Windows は WSL を使用）。
+実行時の依存パッケージはありません。macOS / Linux では Node.js **22.18 以上**が必要です。Windows では npm でインストールします（方法 A）。
 
 > CLI のメッセージは英語です。
 
@@ -24,6 +24,7 @@ backlog-bridge setup
 ```
 
 `--install-links` は、npm 10 が一時的な git クローンへのリンクではなくパッケージ本体をコピーするために必要です。
+リリースを固定するにはタグを付けます：`github:mickey-ichi/backlog-bridge#v0.1.0`。[CHANGELOG.md](CHANGELOG.md) を参照。
 
 **方法 B — git clone**（更新は `git pull`）：
 

@@ -11,6 +11,8 @@ import path from "node:path";
 // src/ when running .ts directly, dist/ when running the build — both sit directly under the repo root.
 export const ROOT = path.join(import.meta.dirname, "..");
 export const DEFAULT_HOME = path.join(os.homedir(), ".config", "backlog-bridge");
+// Single source of the version: package.json (present in git clones and npm installs alike).
+export const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
 export const LEGACY_HOME = path.join(os.homedir(), ".config", "backlog-sync");
 export function setting(name) {
     return process.env[`BACKLOG_BRIDGE_${name}`] || process.env[`BACKLOG_SYNC_${name}`];

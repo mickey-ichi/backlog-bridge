@@ -5,12 +5,11 @@
 // refusal, writes are dry runs until confirmed). Writes need `send: true`; sync is preview-only here.
 import { spawn } from "node:child_process";
 import path from "node:path";
-import { reviewPrefs } from "./config.js";
+import { reviewPrefs, VERSION } from "./config.js";
 const EXT = import.meta.filename.endsWith(".ts") ? "ts" : "js";
 const BL = path.join(import.meta.dirname, `cli.${EXT}`);
 const SYNC = path.join(import.meta.dirname, `sync.${EXT}`);
 const PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
-const VERSION = "0.2.0";
 function run(script, args) {
     return new Promise((resolve) => {
         const child = spawn(process.execPath, [script, ...args], { stdio: ["ignore", "pipe", "pipe"] });

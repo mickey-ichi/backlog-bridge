@@ -17,21 +17,21 @@
     "codex",
     "cursor"
   ],
-  "private": true,
   "type": "module",
   "bin": {
-    "backlog-bridge": "bin/backlog-bridge"
+    "backlog-bridge": "bin/backlog-bridge.js"
   },
   "files": [
-    "bin",
-    "src",
-    "dist",
     ".agents",
-    "config.example.json",
     ".env.example",
     "AGENTS.md",
+    "CHANGELOG.md",
+    "LICENSE",
     "README*.md",
-    "LICENSE"
+    "bin",
+    "config.example.json",
+    "dist",
+    "src"
   ],
   "engines": {
     "node": ">=22.18"

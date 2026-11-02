@@ -10,7 +10,7 @@ Cầu nối tới **nhiều [Backlog](https://backlog.com) (Nulab) space cùng l
 - **Dùng được với agent** — có sẵn skill cho Claude Code, Codex, Cursor (`AGENTS.md`, `.agents/skills/`).
   MCP Backlog chính chủ chỉ gắn được một space; công cụ này dùng được với bao nhiêu space cũng được.
 
-Không có dependency lúc chạy. Cần Node.js **>= 22.18** và macOS hoặc Linux (Windows thì dùng WSL).
+Không có dependency lúc chạy. Cần Node.js **>= 22.18** trên macOS hoặc Linux; Windows thì cài bằng npm (cách A).
 
 > Thông báo của CLI bằng tiếng Anh.
 
@@ -24,6 +24,7 @@ backlog-bridge setup
 ```
 
 `--install-links` để npm chép gói vào thay vì link tới một bản clone git tạm (npm 10).
+Cài cố định một bản release bằng cách thêm tag: `github:mickey-ichi/backlog-bridge#v0.1.0`. Xem [CHANGELOG.md](CHANGELOG.md).
 
 **Cách B — git clone** (cập nhật sau này bằng `git pull`):
 

@@ -10,7 +10,7 @@ A bridge to **many [Backlog](https://backlog.com) (Nulab) spaces at once** — f
 - **Agent-ready** — ships skills for Claude Code, Codex and Cursor (`AGENTS.md`, `.agents/skills/`).
   The official Backlog MCP server binds to a single space; this works with as many as you connect.
 
-Zero runtime dependencies. Needs Node.js **>= 22.18** and macOS or Linux (on Windows, use WSL).
+Zero runtime dependencies. Needs Node.js **>= 22.18** on macOS or Linux; on Windows, install with npm (option A).
 
 ## Install
 
@@ -22,6 +22,7 @@ backlog-bridge setup
 ```
 
 `--install-links` makes npm copy the package instead of linking to a temporary git clone (npm 10).
+Pin a release by appending the tag: `github:mickey-ichi/backlog-bridge#v0.1.0`. See [CHANGELOG.md](CHANGELOG.md).
 
 **Option B — git clone** (update later with `git pull`):
 

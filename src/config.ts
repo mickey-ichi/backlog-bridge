@@ -13,6 +13,9 @@ import type { Config, Credentials, Profile } from "./types.ts";
 // src/ when running .ts directly, dist/ when running the build — both sit directly under the repo root.
 export const ROOT = path.join(import.meta.dirname, "..");
 export const DEFAULT_HOME = path.join(os.homedir(), ".config", "backlog-bridge");
+
+// Single source of the version: package.json (present in git clones and npm installs alike).
+export const VERSION: string = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
 export const LEGACY_HOME = path.join(os.homedir(), ".config", "backlog-sync");
 
 export function setting(name: "HOME" | "CONFIG" | "PROFILE"): string | undefined {

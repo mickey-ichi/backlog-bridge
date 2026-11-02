@@ -32,3 +32,34 @@ jobs:
           node dist/cli.js home
           HOME="$RUNNER_TEMP/home" ./bin/backlog-bridge setup
           HOME="$RUNNER_TEMP/home" ./bin/backlog-bridge setup --uninstall
+
+  # npm entry point + tests on the other platforms (the POSIX launcher and dist/ freshness are checked above).
+  cross-platform:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Smoke test via the npm launcher
+        env:
+          HOME: ${{ runner.temp }}/home
+          USERPROFILE: ${{ runner.temp }}/home
+        run: |
+          mkdir -p "$HOME/.claude"
+          node bin/backlog-bridge.js --version
+          node bin/backlog-bridge.js sync --list
+          node bin/backlog-bridge.js mcp --config
+          node bin/backlog-bridge.js setup
+          node bin/backlog-bridge.js spaces
+          node bin/backlog-bridge.js setup --uninstall
