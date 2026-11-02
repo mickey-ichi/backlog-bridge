@@ -31,7 +31,15 @@ export function homeDir() {
     const configured = setting("HOME");
     if (configured)
         return path.resolve(configured);
-    return [DEFAULT_HOME, LEGACY_HOME].find((d) => fs.existsSync(d)) || ROOT;
+    const existing = [DEFAULT_HOME, LEGACY_HOME].find((d) => fs.existsSync(d));
+    if (existing)
+        return existing;
+    // The install directory is only used for git clones that still hold data the old way (.env / config.json in
+    // the repo root). Never for npm installs: they are replaced on every update. Otherwise the default, even
+    // before `backlog-bridge setup` has created it.
+    const legacyRepoData = !ROOT.includes(`${path.sep}node_modules${path.sep}`)
+        && [".env", "config.json"].some((f) => fs.existsSync(path.join(ROOT, f)));
+    return legacyRepoData ? ROOT : DEFAULT_HOME;
 }
 // The .env files being read (home first, then repo).
 export function envFiles() {

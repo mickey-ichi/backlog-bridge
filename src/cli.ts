@@ -321,7 +321,10 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   async spaces() {
     warnLooseEnv();
     if (!Object.keys(SPACES).length) {
-      console.log(`No spaces yet — add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${envFiles()[0] || path.join(homeDir(), ".env")}`);
+      const env = envFiles()[0];
+      console.log(env
+        ? `No spaces yet — add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${env}`
+        : `No spaces yet — run \`backlog-bridge setup\`, then add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${path.join(homeDir(), ".env")}`);
       return;
     }
     for (const [name, s] of Object.entries(SPACES)) {
