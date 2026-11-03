@@ -164,6 +164,8 @@ backlog-bridge sync --profile=<名前> [フラグ]
 
 ## AI エージェントでの利用
 
+**Claude Code（Claude アプリの Code タブ）：手順 — [docs/claude-code.md](docs/claude-code.md)（英語）。**
+
 | エージェント | 読み込むもの |
 |---|---|
 | Claude Code | `CLAUDE.md` → `AGENTS.md`、スキルは `.claude/skills` → `.agents/skills` |

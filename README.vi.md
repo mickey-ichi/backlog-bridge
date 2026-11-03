@@ -164,6 +164,8 @@ An toàn: **mặc định chỉ xem trước** (`--live` mới ghi), `neverTouch
 
 ## Dùng với AI agent
 
+**Claude Code (tab Code của app Claude): hướng dẫn từng bước — [docs/claude-code.vi.md](docs/claude-code.vi.md).**
+
 | Agent | Đọc |
 |---|---|
 | Claude Code | `CLAUDE.md` → `AGENTS.md`, skill qua `.claude/skills` → `.agents/skills` |
