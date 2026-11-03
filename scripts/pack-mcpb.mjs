@@ -62,11 +62,8 @@ const manifest = {
     },
   },
   tools: TOOLS.map(({ name, description }) => ({ name, description })),
-  compatibility: {
-    claude_desktop: ">=0.10.0",
-    platforms: ["darwin", "win32", "linux"],
-    runtimes: { node: ">=20.11.0" },
-  },
+  // No `compatibility` block on purpose: without one Claude Desktop runs the server on its built-in Node
+  // ("UtilityProcess"), as with Nulab's own Backlog extension — users need no Node install. dist/ needs >= 20.11.
 };
 fs.writeFileSync(path.join(stage, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
