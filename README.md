@@ -23,7 +23,7 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-A specific version: `npm install -g backlog-bridge@0.1.2`. Unreleased `main` from GitHub:
+A specific version: `npm install -g backlog-bridge@0.1.4`. Unreleased `main` from GitHub:
 `npm install -g --install-links github:mickey-ichi/backlog-bridge` (`--install-links` makes npm 10 copy the package
 instead of linking to a temporary clone). Release notes: [CHANGELOG.md](CHANGELOG.md).
 

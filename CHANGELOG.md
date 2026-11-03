@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+- Releases are automated: publishing a GitHub Release builds and attaches the `.mcpb` and publishes to npm via
+  Trusted Publishing (with provenance).
+- `npm fund` / GitHub Sponsors link; Support section in the READMEs.
+
 ## 0.1.3
 
 - **Claude plugin** (`plugin/`, built by `npm run build`): the 4 skills plus the MCP server as a local
