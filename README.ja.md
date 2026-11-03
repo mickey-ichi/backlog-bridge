@@ -237,6 +237,11 @@ npm run build        # dist/*.js — コミット必須：npm インストール
 Node は型ストリッピングで `.ts` を実行するため、消去可能な構文のみ使用します（`enum`、`namespace`、
 パラメータプロパティは不可）。内部の import は拡張子 `.ts` を付けます。
 
+## 支援
+
+backlog-bridge がお役に立ったら、[GitHub Sponsors](https://github.com/sponsors/mickey-ichi) で開発を支援していただけます。
+バグ報告やプルリクエストも大歓迎です。
+
 ## ライセンス
 
 [MIT](LICENSE)

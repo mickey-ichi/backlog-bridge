@@ -237,6 +237,11 @@ npm run build        # dist/*.js — commit it: npm installs run dist/, and CI f
 Node runs `.ts` via type stripping, so only erasable syntax is allowed (no `enum`, `namespace`, parameter
 properties); internal imports use the `.ts` extension.
 
+## Support
+
+If backlog-bridge saves you time, you can support its development through
+[GitHub Sponsors](https://github.com/sponsors/mickey-ichi). Bug reports and pull requests are just as welcome.
+
 ## License
 
 [MIT](LICENSE)
