@@ -18,10 +18,17 @@ don't need to install Node, npm or anything else.
 
 1. Download `backlog-bridge-<version>.mcpb` from the latest
    [GitHub Release](https://github.com/mickey-ichi/backlog-bridge/releases/latest).
-2. Double-click the file. Claude Desktop opens an install dialog — click **Install**.
-   (Or: Claude Desktop → **Settings → Extensions**, then install the downloaded file from there.)
+2. Double-click the file, or drag it onto Claude Desktop → **Settings → Extensions**. An install dialog opens —
+   click **Install**. (Not *Connectors → Add custom connector*: that is for remote servers with an `https://` URL.)
 3. Leave **Data folder** as it is (`~/.config/backlog-bridge`) unless you keep your keys somewhere else.
-4. Make sure the extension **Backlog Bridge** is **enabled** in Settings → Extensions.
+4. Check that **Backlog Bridge** (labelled *Custom*) is listed and enabled in Settings → Extensions. It is a different
+   extension from **Backlog**, Nulab's own.
+
+> **Team / Enterprise plan:** if **Install** is greyed out or the extension shows *Not allowed in your current
+> organization*, your organization limits desktop extensions to an allowlist. An Owner adds it once for everyone:
+> claude.ai → **Organization settings → Connectors → Desktop** → upload the `.mcpb` (for a new version: **Upload new
+> version** in its `⋯` menu). It can take a while to reach members. Until then, use
+> [Claude Code](claude-code.md) — it needs no approval.
 
 ## 2. Create your data folder
 
@@ -108,6 +115,8 @@ How writes work:
 | Problem | Fix |
 |---|---|
 | Tools don't appear | Quit Claude Desktop completely (**⌘Q**) and open it again; check the extension is enabled |
+| **Install** greyed out / *Not allowed in your current organization* | Organization allowlist — see the Team / Enterprise note in step 1 |
+| Every tool returns `(no output)` | Version 0.1.2 or older — install the latest `.mcpb` |
 | Server shows an error | Read the log: `open ~/Library/Logs/Claude` → the `mcp-server-Backlog Bridge.log` file (and `mcp.log`) |
 | `No spaces yet` after editing `.env` | Each space needs both lines with the same prefix; check for typos and saved file |
 | Keys in a different folder | Settings → Extensions → Backlog Bridge → set **Data folder** |
