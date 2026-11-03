@@ -3,7 +3,7 @@
 // Acts as a "bridge" for agents (Claude Code / Codex / Cursor / workspace): the official Backlog MCP
 // can attach only 1 space, while this CLI can call every configured space.
 //
-//   backlog-bridge setup [--uninstall] [--force]         # install global backlog-bridge command + skills for Claude/Codex/Cursor
+//   backlog-bridge setup [--uninstall] [--force] [--data-only]         # install global backlog-bridge command + skills for Claude/Codex/Cursor
 //   backlog-bridge home [--init]                         # directory holding .env/config/state; --init copies from repo
 //   backlog-bridge spaces [--check]                      # list spaces, --check makes a test API call
 //   backlog-bridge projects <space>
@@ -170,6 +170,12 @@ function placeLink(link: string, target: string, force: boolean): string {
 }
 
 function setupInstall(force: boolean): void {
+  installSkillsAndCommand(force);
+  setupData();
+  console.log("\nDone. Verify with: backlog-bridge spaces --check");
+}
+
+function installSkillsAndCommand(force: boolean): void {
   const skillsSrc = path.join(ROOT, ".agents", "skills");
   const names = fs.readdirSync(skillsSrc).filter((n) => fs.existsSync(path.join(skillsSrc, n, "SKILL.md")));
 
@@ -199,7 +205,11 @@ function setupInstall(force: boolean): void {
     if (!onPath) console.log(`  ! ${BIN_DIR} is not on PATH — add: export PATH="$HOME/.local/bin:$PATH"`);
   }
 
-  // Home directory + sample .env (chmod 600). Never overwrites an existing .env.
+}
+
+// Home directory + sample .env (chmod 600). Never overwrites an existing .env. Also the only step the
+// Claude Desktop extension needs (`setup --data-only`, MCP tool create_data_folder).
+function setupData(): void {
   const home = setting("HOME") ? path.resolve(setting("HOME")!) : DEFAULT_HOME;
   fs.mkdirSync(path.join(home, "state"), { recursive: true, mode: 0o700 });
   const envFile = path.join(home, ".env");
@@ -207,14 +217,15 @@ function setupInstall(force: boolean): void {
   if (exists(envFile)) {
     console.log(`  = ${envFile}`);
   } else {
-    fs.copyFileSync(path.join(ROOT, ".env.example"), envFile);
+    // The .mcpb bundle can't ship a dotfile, so it carries the template as env.example.
+    const template = [".env.example", "env.example"].map((f) => path.join(ROOT, f)).find((f) => fs.existsSync(f))!;
+    fs.copyFileSync(template, envFile);
     fs.chmodSync(envFile, 0o600);
     console.log(`  + ${envFile} (sample — fill in <PREFIX>_SPACE / <PREFIX>_API_KEY for each space)`);
   }
   if (!exists(path.join(home, "config.json"))) {
     console.log(`  (no config.json yet — only needed for backlog-bridge sync; sample: ${path.join(ROOT, "config.example.json")})`);
   }
-  console.log("\nDone. Verify with: backlog-bridge spaces --check");
 }
 
 function setupUninstall(): void {
@@ -274,6 +285,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
 
   async setup() {
     if (hasFlag("uninstall")) setupUninstall();
+    else if (hasFlag("data-only")) setupData();
     else setupInstall(hasFlag("force"));
   },
 
@@ -324,7 +336,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
       const env = envFiles()[0];
       console.log(env
         ? `No spaces yet — add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${env}`
-        : `No spaces yet — run \`backlog-bridge setup\`, then add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${path.join(homeDir(), ".env")}`);
+        : `No spaces yet — run \`backlog-bridge setup\` (Claude Desktop: the create_data_folder tool), then add <PREFIX>_SPACE / <PREFIX>_API_KEY pairs to ${path.join(homeDir(), ".env")}`);
       return;
     }
     for (const [name, s] of Object.entries(SPACES)) {

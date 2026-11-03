@@ -16,3 +16,7 @@ config.json
 .claude/worktrees/
 .claude/settings.local.json
 .DS_Store
+
+# Desktop Extension build (npm run pack:mcpb)
+build/
+*.mcpb

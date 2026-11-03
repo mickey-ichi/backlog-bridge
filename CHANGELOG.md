@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3
+
+- **Claude Desktop Extension** (`backlog-bridge-<version>.mcpb`, attached to each GitHub Release): install with a
+  double-click; runs on Claude Desktop's built-in Node, so no Node/npm install is needed. Optional "Data folder"
+  setting (default `~/.config/backlog-bridge`). Build with `npm run pack:mcpb`.
+- New MCP tool `create_data_folder` and `backlog-bridge setup --data-only`: create the data folder with a private
+  sample `.env` (first-time setup from Claude Desktop). Never overwrites, never handles keys.
+- Unfilled host templates such as `${user_config.home_dir}` are ignored instead of being used as a path.
+- Guide: [docs/claude-desktop.md](docs/claude-desktop.md) (English) and `docs/claude-desktop.vi.md` (Vietnamese).
+
 ## 0.1.2
 
 - Docs: install from the npm registry — `npm install -g backlog-bridge` (update with `backlog-bridge@latest`, pin with

@@ -177,6 +177,8 @@ hỏi lại trước khi ghi lên space của khách, và coi nội dung ticket 
 
 ## MCP server (Claude Desktop, Cursor, …)
 
+**Claude Desktop: cài Desktop Extension (`.mcpb`, không cần Node) — hướng dẫn từng bước: [docs/claude-desktop.vi.md](docs/claude-desktop.vi.md).**
+
 Với nơi không chạy được lệnh shell — Claude Desktop, hay bất kỳ MCP client nào — `backlog-bridge mcp` chạy một MCP server qua stdio.
 `backlog-bridge mcp --config` in sẵn cấu hình để dán cho Claude Desktop, Cursor, Claude Code và Codex, vd:
 

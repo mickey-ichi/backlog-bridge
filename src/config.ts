@@ -19,7 +19,9 @@ export const VERSION: string = JSON.parse(fs.readFileSync(path.join(ROOT, "packa
 export const LEGACY_HOME = path.join(os.homedir(), ".config", "backlog-sync");
 
 export function setting(name: "HOME" | "CONFIG" | "PROFILE"): string | undefined {
-  return process.env[`BACKLOG_BRIDGE_${name}`] || process.env[`BACKLOG_SYNC_${name}`];
+  // Hosts such as Claude Desktop may pass an unfilled template ("${user_config.x}") or "" — treat as unset.
+  const usable = (v: string | undefined) => (v && !v.startsWith("${") ? v : undefined);
+  return usable(process.env[`BACKLOG_BRIDGE_${name}`]) || usable(process.env[`BACKLOG_SYNC_${name}`]);
 }
 
 // How content is reviewed before sending to the customer — per person, so set it in your own .env:
