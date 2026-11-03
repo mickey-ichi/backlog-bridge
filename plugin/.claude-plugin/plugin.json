@@ -1,7 +1,7 @@
 {
   "name": "backlog-bridge",
   "displayName": "Backlog Bridge",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Read and write many Backlog (Nulab) spaces at once — issues, comments, search, activity, sync previews. Writes are previewed and confirmed; customer replies follow your review mode.",
   "author": {
     "name": "mickey-ichi",
