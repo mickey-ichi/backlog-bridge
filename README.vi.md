@@ -1,5 +1,7 @@
 # backlog-bridge
 
+[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge) [![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+
 [English](README.md) · **Tiếng Việt** · [日本語](README.ja.md)
 
 Cầu nối tới **nhiều [Backlog](https://backlog.com) (Nulab) space cùng lúc** — cho người và cho AI agent.
@@ -16,15 +18,15 @@ Không có dependency lúc chạy. Cần Node.js **>= 22.18** trên macOS hoặc
 
 ## Cài đặt
 
-**Cách A — npm (lấy từ GitHub):**
+**Cách A — npm:**
 
 ```bash
-npm install -g --install-links github:mickey-ichi/backlog-bridge
+npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-`--install-links` để npm chép gói vào thay vì link tới một bản clone git tạm (npm 10).
-Cài cố định một bản release bằng cách thêm tag: `github:mickey-ichi/backlog-bridge#v0.1.1`. Xem [CHANGELOG.md](CHANGELOG.md).
+Cài thẳng từ GitHub (vd một tag cụ thể): `npm install -g --install-links github:mickey-ichi/backlog-bridge#v0.1.1`
+(`--install-links` để npm 10 chép gói vào thay vì link tới một bản clone tạm). Xem [CHANGELOG.md](CHANGELOG.md).
 
 **Cách B — git clone** (cập nhật sau này bằng `git pull`):
 
@@ -47,7 +49,7 @@ backlog-bridge issue https://acme.backlog.jp/view/ACME-123
 
 API key: *Personal Settings → API → Register new API key*, ở **từng** space.
 
-**Cập nhật:** chạy lại đúng lệnh `npm install -g …` (cách A) hoặc `git pull` (cách B).
+**Cập nhật:** `npm install -g backlog-bridge@latest` (cách A) hoặc `git pull` (cách B).
 **Gỡ cài:** `backlog-bridge setup --uninstall`, rồi `npm uninstall -g backlog-bridge` (cách A) hoặc xoá thư mục clone
 (cách B). Dữ liệu ở `~/.config/backlog-bridge` được giữ nguyên.
 
