@@ -1,0 +1,58 @@
+name: Release
+
+# Publishing a GitHub Release (tag vX.Y.Z) publishes that version to npm and attaches the Claude Desktop Extension.
+# npm auth is Trusted Publishing (OIDC): no token secret; npmjs.com → backlog-bridge → Settings → Trusted Publisher
+# must name this repository and `release.yml`. Provenance is added automatically.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write   # upload the .mcpb to the release
+  id-token: write   # npm Trusted Publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest   # Trusted Publishing needs npm >= 11.5.1
+      - run: npm ci
+      - name: Tag matches package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: dist/ and plugin/ are up to date with src/
+        run: |
+          if ! git diff --exit-code -- dist plugin || [ -n "$(git status --porcelain -- plugin)" ]; then
+            echo "dist/ or plugin/ is stale - run npm run build and commit it"
+            exit 1
+          fi
+      - name: Attach the Claude Desktop Extension
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/pack-mcpb.mjs
+          gh release upload "$GITHUB_REF_NAME" build/backlog-bridge-*.mcpb --clobber
+      - name: Publish to npm
+        env:
+          # A GitHub pre-release goes to the `next` dist-tag, so `npm install backlog-bridge` keeps getting the stable one.
+          DIST_TAG: ${{ github.event.release.prerelease && 'next' || 'latest' }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "backlog-bridge@$version" version >/dev/null 2>&1; then
+            echo "backlog-bridge@$version is already on npm - skipping"
+          else
+            npm publish --tag "$DIST_TAG"
+          fi
