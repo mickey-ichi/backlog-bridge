@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Docs: install from the npm registry — `npm install -g backlog-bridge` (update with `backlog-bridge@latest`, pin with
+  `backlog-bridge@<version>`); GitHub installs stay documented for unreleased `main`. This README is what npmjs.com shows.
+- The Windows hint in `backlog-bridge setup` points to the npm install.
+- package.json: homepage and issue tracker links for the npm page.
+
 ## 0.1.1
 
 - Fix: before `backlog-bridge setup` had run, an npm install used its own install directory as the home directory,

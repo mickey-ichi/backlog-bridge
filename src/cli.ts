@@ -186,7 +186,7 @@ function setupInstall(force: boolean): void {
 
   // Installed via npm: npm already put backlog-bridge on PATH; installed from a git clone: symlink into ~/.local/bin.
   if (process.platform === "win32") {
-    console.log("Command:\n  (Windows: install with npm — `npm install -g --install-links github:mickey-ichi/backlog-bridge` puts backlog-bridge on PATH)");
+    console.log("Command:\n  (Windows: install with npm — `npm install -g backlog-bridge` puts backlog-bridge on PATH)");
   } else if (!ROOT.includes(`${path.sep}node_modules${path.sep}`)) {
     console.log("Command:");
     console.log("  " + placeLink(path.join(BIN_DIR, "backlog-bridge"), path.join(ROOT, "bin", "backlog-bridge"), force));
