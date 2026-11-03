@@ -85,7 +85,8 @@ test("create_data_folder: creates the folder with a private sample .env, never o
   assert.equal(first.result.isError, false);
   const env = path.join(process.env.BACKLOG_BRIDGE_TEST_HOME!, ".env");
   assert.ok(fs.existsSync(env));
-  assert.equal(fs.statSync(env).mode & 0o777, 0o600);
+  // POSIX permissions only: Windows reports 0o666 whatever chmod sets.
+  if (process.platform !== "win32") assert.equal(fs.statSync(env).mode & 0o777, 0o600);
   fs.appendFileSync(env, "\nMARKER=1\n");
   await callTool("create_data_folder");
   assert.match(fs.readFileSync(env, "utf8"), /MARKER=1/);
