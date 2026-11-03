@@ -164,6 +164,10 @@ updated in place via a hidden marker.
 
 **Claude Code (the Code tab of the Claude app): step-by-step guide — [docs/claude-code.md](docs/claude-code.md).**
 
+**Claude plugin** (`plugin/`): the skills and the MCP server in one package for Claude Code and Cowork — try it with
+`claude --plugin-dir plugin` from a clone. It needs Node.js 20+ on `PATH`; chat in the Claude app uses the Desktop
+Extension instead.
+
 | Agent | Picks up |
 |---|---|
 | Claude Code | `CLAUDE.md` → `AGENTS.md`, skills via `.claude/skills` → `.agents/skills` |

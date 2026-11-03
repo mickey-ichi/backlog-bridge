@@ -166,6 +166,9 @@ backlog-bridge sync --profile=<名前> [フラグ]
 
 **Claude Code（Claude アプリの Code タブ）：手順 — [docs/claude-code.md](docs/claude-code.md)（英語）。**
 
+**Claude プラグイン**（`plugin/`）：スキルと MCP サーバーをまとめたもので、Claude Code と Cowork 向けです。クローンで
+`claude --plugin-dir plugin` を実行して試せます。`PATH` に Node.js 20 以上が必要です。Claude アプリのチャットでは Desktop Extension を使います。
+
 | エージェント | 読み込むもの |
 |---|---|
 | Claude Code | `CLAUDE.md` → `AGENTS.md`、スキルは `.claude/skills` → `.agents/skills` |
