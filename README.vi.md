@@ -239,6 +239,11 @@ npm run build        # dist/*.js — phải commit: cài qua npm chạy dist/, C
 Node chạy `.ts` bằng type stripping nên chỉ dùng cú pháp xoá được (không `enum`, `namespace`, parameter property);
 import nội bộ ghi đuôi `.ts`.
 
+## Ủng hộ
+
+Nếu backlog-bridge giúp bạn tiết kiệm thời gian, bạn có thể ủng hộ dự án qua
+[GitHub Sponsors](https://github.com/sponsors/mickey-ichi). Báo lỗi và pull request cũng rất đáng quý.
+
 ## License
 
 [MIT](LICENSE)

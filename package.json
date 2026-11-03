@@ -11,6 +11,10 @@
   "bugs": {
     "url": "https://github.com/mickey-ichi/backlog-bridge/issues"
   },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/mickey-ichi"
+  },
   "keywords": [
     "backlog",
     "nulab",
