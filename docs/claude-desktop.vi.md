@@ -18,10 +18,17 @@ trong app, nên **không cần cài Node, npm hay gì thêm**.
 
 1. Tải `backlog-bridge-<version>.mcpb` ở bản mới nhất trên
    [GitHub Releases](https://github.com/mickey-ichi/backlog-bridge/releases/latest).
-2. Bấm đúp vào file. Claude Desktop mở hộp thoại cài đặt → bấm **Install**.
-   (Hoặc: Claude Desktop → **Settings → Extensions**, rồi cài file vừa tải từ đó.)
+2. Bấm đúp vào file, hoặc kéo thả vào Claude Desktop → **Settings → Extensions**. Hộp thoại cài đặt mở ra → bấm
+   **Install**. (Không phải *Connectors → Add custom connector*: chỗ đó dành cho server từ xa có URL `https://`.)
 3. Ô **Data folder** để nguyên (`~/.config/backlog-bridge`), trừ khi bạn để key ở chỗ khác.
-4. Kiểm tra extension **Backlog Bridge** đang **bật** trong Settings → Extensions.
+4. Kiểm tra **Backlog Bridge** (nhãn *Custom*) có trong danh sách và đang bật ở Settings → Extensions. Đây là extension
+   khác với **Backlog** của Nulab.
+
+> **Gói Team / Enterprise:** nếu nút **Install** bị mờ hoặc extension báo *Not allowed in your current
+> organization*, tổ chức đang giới hạn extension theo allowlist. Owner thêm một lần cho cả team: claude.ai →
+> **Organization settings → Connectors → Desktop** → upload file `.mcpb` (bản mới: **Upload new version** trong menu
+> `⋯`). Có thể mất một lúc mới tới máy thành viên. Trong lúc chờ, dùng [Claude Code](claude-code.vi.md) — không cần
+> duyệt.
 
 ## 2. Tạo thư mục dữ liệu
 
@@ -108,6 +115,8 @@ Cách ghi hoạt động:
 | Vấn đề | Cách xử lý |
 |---|---|
 | Không thấy tool | Thoát hẳn Claude Desktop (**⌘Q**) rồi mở lại; kiểm tra extension đang bật |
+| Nút **Install** bị mờ / *Not allowed in your current organization* | Allowlist của tổ chức — xem ghi chú Team / Enterprise ở bước 1 |
+| Tool nào cũng trả về `(no output)` | Bản 0.1.2 trở về trước — cài file `.mcpb` mới nhất |
 | Server báo lỗi | Xem log: `open ~/Library/Logs/Claude` → file `mcp-server-Backlog Bridge.log` (và `mcp.log`) |
 | Vẫn `No spaces yet` sau khi sửa `.env` | Mỗi space cần đủ hai dòng cùng prefix; kiểm tra lỗi chính tả và đã lưu file chưa |
 | Key để ở thư mục khác | Settings → Extensions → Backlog Bridge → đặt **Data folder** |
