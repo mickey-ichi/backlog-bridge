@@ -25,8 +25,9 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-Cài thẳng từ GitHub (vd một tag cụ thể): `npm install -g --install-links github:mickey-ichi/backlog-bridge#v0.1.1`
-(`--install-links` để npm 10 chép gói vào thay vì link tới một bản clone tạm). Xem [CHANGELOG.md](CHANGELOG.md).
+Một version cụ thể: `npm install -g backlog-bridge@0.1.2`. Bản `main` chưa release, lấy thẳng từ GitHub:
+`npm install -g --install-links github:mickey-ichi/backlog-bridge` (`--install-links` để npm 10 chép gói vào thay vì
+link tới một bản clone tạm). Ghi chú phát hành: [CHANGELOG.md](CHANGELOG.md).
 
 **Cách B — git clone** (cập nhật sau này bằng `git pull`):
 

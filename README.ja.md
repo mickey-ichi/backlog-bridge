@@ -25,8 +25,9 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-GitHub から直接（特定のタグなど）：`npm install -g --install-links github:mickey-ichi/backlog-bridge#v0.1.1`
-（`--install-links` は npm 10 が一時クローンへのリンクではなく本体をコピーするため）。[CHANGELOG.md](CHANGELOG.md) を参照。
+特定のバージョン：`npm install -g backlog-bridge@0.1.2`。未リリースの `main` を GitHub から：
+`npm install -g --install-links github:mickey-ichi/backlog-bridge`（`--install-links` は npm 10 が一時クローンへのリンクではなく
+本体をコピーするため）。リリースノート：[CHANGELOG.md](CHANGELOG.md)。
 
 **方法 B — git clone**（更新は `git pull`）：
 
