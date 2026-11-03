@@ -114,6 +114,8 @@ How writes work:
 
 ## Also using a terminal or Claude Code?
 
+Step-by-step guide: [claude-code.md](claude-code.md).
+
 Install the CLI too — same data folder, plus skills for Claude Code, Codex and Cursor:
 
 ```bash

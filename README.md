@@ -162,6 +162,8 @@ updated in place via a hidden marker.
 
 ## Using with AI agents
 
+**Claude Code (the Code tab of the Claude app): step-by-step guide — [docs/claude-code.md](docs/claude-code.md).**
+
 | Agent | Picks up |
 |---|---|
 | Claude Code | `CLAUDE.md` → `AGENTS.md`, skills via `.claude/skills` → `.agents/skills` |

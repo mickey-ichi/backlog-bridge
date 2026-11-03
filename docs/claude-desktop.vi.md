@@ -114,6 +114,8 @@ Cách ghi hoạt động:
 
 ## Dùng thêm terminal hoặc Claude Code?
 
+Hướng dẫn từng bước: [claude-code.vi.md](claude-code.vi.md).
+
 Cài thêm CLI — dùng chung thư mục dữ liệu, kèm skill cho Claude Code, Codex và Cursor:
 
 ```bash
