@@ -1,0 +1,60 @@
+{
+  "defaultProfile": "acme",
+  "profiles": {
+    "acme": {
+      "mode": "mirror",
+      "note": "Customer ACME's Backlog -> your internal Backlog. Creates one internal issue per planned customer task.",
+      "source": { "space": "acme", "projectKey": "ACME" },
+      "dest": {
+        "space": "internal",
+        "projectKey": "DEV",
+        "customFields": { "Severity": "Medium" }
+      },
+      "state": "state/mapping-acme.json",
+      "filter": { "requireDueDate": true, "assignees": [] },
+      "map": {
+        "issueType": { "実装": "Task", "バグ": "Bug" },
+        "priority": { "High": "High", "Normal": "Normal", "Low": "Low" },
+        "status": { "Open": "Open", "In Progress": "In Progress", "Resolved": "Resolved", "Closed": "Closed" },
+        "assignee": { "Customer-side Name": "Internal-side Name" }
+      }
+    },
+    "acme-progress": {
+      "mode": "progress",
+      "note": "Internal epics -> progress on ACME's existing WBS issues. Never creates customer issues.",
+      "source": {
+        "space": "internal",
+        "projectKey": "DEV",
+        "feature": {
+          "epicPattern": "^\\s*\\[Epic\\]",
+          "numberPattern": "^\\s*\\[Epic\\]\\s*\\[(\\d+)\\]",
+          "milestone": "Phase 1"
+        },
+        "childGroups": { "api": ["BE", "Infra"], "screen": ["FE"] },
+        "alwaysCount": ["QA"],
+        "rollup": {
+          "doneStatuses": ["Closed", "Resolved"],
+          "activeStatuses": ["In Progress", "Review"],
+          "pendingStatuses": ["Pending"],
+          "ignoreStatuses": ["Reject"]
+        }
+      },
+      "dest": {
+        "space": "acme",
+        "projectKey": "ACME",
+        "match": { "strategy": "pairFile", "pairFile": "state/pairs-acme.json" },
+        "write": {
+          "targets": ["impl", "acceptance"],
+          "acceptanceOnlyWhenDone": true,
+          "status": { "in_progress": "In Progress", "pending": "In Progress", "done": "Resolved" },
+          "neverTouchStatuses": ["Closed"],
+          "allowRegress": false,
+          "dates": "none",
+          "comment": false,
+          "orgName": "YourCompany"
+        }
+      },
+      "state": "state/progress-acme.json"
+    }
+  }
+}

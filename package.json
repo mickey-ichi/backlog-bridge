@@ -44,7 +44,7 @@
     "sync": "node src/sync.ts",
     "dry-run": "node src/sync.ts --dry-run",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-plugin.mjs",
     "test": "node --test \"test/*.test.ts\"",
     "cli": "node src/cli.ts",
     "pack:mcpb": "npm run build && node scripts/pack-mcpb.mjs"

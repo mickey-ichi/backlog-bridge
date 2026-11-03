@@ -2,6 +2,9 @@
 
 ## 0.1.3
 
+- **Claude plugin** (`plugin/`, built by `npm run build`): the 4 skills plus the MCP server as a local
+  stdio server, for Claude Code and Cowork, ready to submit to the Claude plugin directory. Install locally with
+  `claude --plugin-dir plugin`. Chat still uses the Desktop Extension.
 - **Claude Desktop Extension** (`backlog-bridge-<version>.mcpb`, attached to each GitHub Release): install with a
   double-click; runs on Claude Desktop's built-in Node, so no Node/npm install is needed. Optional "Data folder"
   setting (default `~/.config/backlog-bridge`). Build with `npm run pack:mcpb`.

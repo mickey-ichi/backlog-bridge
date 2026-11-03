@@ -166,6 +166,10 @@ An toàn: **mặc định chỉ xem trước** (`--live` mới ghi), `neverTouch
 
 **Claude Code (tab Code của app Claude): hướng dẫn từng bước — [docs/claude-code.vi.md](docs/claude-code.vi.md).**
 
+**Claude plugin** (`plugin/`): skill và MCP server gói chung cho Claude Code và Cowork — chạy thử bằng
+`claude --plugin-dir plugin` trong bản clone. Cần Node.js 20+ trong `PATH`; tab Chat của app Claude thì dùng Desktop
+Extension.
+
 | Agent | Đọc |
 |---|---|
 | Claude Code | `CLAUDE.md` → `AGENTS.md`, skill qua `.claude/skills` → `.agents/skills` |
