@@ -237,6 +237,10 @@ npm run build        # dist/*.js — commit it: npm installs run dist/, and CI f
 Node runs `.ts` via type stripping, so only erasable syntax is allowed (no `enum`, `namespace`, parameter
 properties); internal imports use the `.ts` extension.
 
+**Release:** bump `version` in `package.json`, add a CHANGELOG entry, run `npm run build` and merge. Then publish a GitHub
+Release tagged `v<version>` — the [Release workflow](.github/workflows/release.yml) checks it, attaches the `.mcpb` and
+publishes to npm (Trusted Publishing, with provenance). A GitHub pre-release goes to the `next` dist-tag.
+
 ## Support
 
 If backlog-bridge saves you time, you can support its development through
