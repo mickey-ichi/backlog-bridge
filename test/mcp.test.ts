@@ -21,6 +21,7 @@ const callTool = (name: string, args: unknown = {}) => rpc("tools/call", { name,
 
 before(() => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), "bb-mcp-"));
+  process.env.BACKLOG_BRIDGE_TEST_HOME = home;
   child = spawn(process.execPath, [path.join(import.meta.dirname, "..", "src", "cli.ts"), "mcp"], {
     env: { PATH: process.env.PATH, HOME: home, BACKLOG_BRIDGE_HOME: home, BACKLOG_BRIDGE_REVIEW: "translate" },
   });
@@ -77,4 +78,16 @@ test("tools run the CLI: home_info and list_spaces in an empty home", async () =
 test("unknown tool and unknown method are JSON-RPC errors", async () => {
   assert.equal((await callTool("nope")).error.code, -32602);
   assert.equal((await rpc("nope/nope")).error.code, -32601);
+});
+
+test("create_data_folder: creates the folder with a private sample .env, never overwrites", async () => {
+  const first = await callTool("create_data_folder");
+  assert.equal(first.result.isError, false);
+  const env = path.join(process.env.BACKLOG_BRIDGE_TEST_HOME!, ".env");
+  assert.ok(fs.existsSync(env));
+  // POSIX permissions only: Windows reports 0o666 whatever chmod sets.
+  if (process.platform !== "win32") assert.equal(fs.statSync(env).mode & 0o777, 0o600);
+  fs.appendFileSync(env, "\nMARKER=1\n");
+  await callTool("create_data_folder");
+  assert.match(fs.readFileSync(env, "utf8"), /MARKER=1/);
 });

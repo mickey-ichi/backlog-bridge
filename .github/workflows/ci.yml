@@ -18,6 +18,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Claude Desktop extension packs and validates
+        run: node scripts/pack-mcpb.mjs
       - name: dist/ is up to date with src/
         run: |
           if ! git diff --exit-code -- dist; then

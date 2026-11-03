@@ -15,7 +15,9 @@ export const DEFAULT_HOME = path.join(os.homedir(), ".config", "backlog-bridge")
 export const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version;
 export const LEGACY_HOME = path.join(os.homedir(), ".config", "backlog-sync");
 export function setting(name) {
-    return process.env[`BACKLOG_BRIDGE_${name}`] || process.env[`BACKLOG_SYNC_${name}`];
+    // Hosts such as Claude Desktop may pass an unfilled template ("${user_config.x}") or "" — treat as unset.
+    const usable = (v) => (v && !v.startsWith("${") ? v : undefined);
+    return usable(process.env[`BACKLOG_BRIDGE_${name}`]) || usable(process.env[`BACKLOG_SYNC_${name}`]);
 }
 export function reviewPrefs() {
     const raw = process.env.BACKLOG_BRIDGE_REVIEW?.trim().toLowerCase();

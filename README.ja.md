@@ -177,6 +177,8 @@ backlog-bridge sync --profile=<名前> [フラグ]
 
 ## MCP サーバー（Claude Desktop、Cursor など）
 
+**Claude Desktop：Desktop Extension（`.mcpb`、Node 不要）をインストール — 手順：[docs/claude-desktop.md](docs/claude-desktop.md)（英語）。**
+
 シェルを使えないホスト（Claude Desktop や任意の MCP クライアント）向けに、`backlog-bridge mcp` が stdio で MCP サーバーを起動します。
 `backlog-bridge mcp --config` で Claude Desktop・Cursor・Claude Code・Codex 用の設定をそのまま貼れる形で表示します。例：
 
