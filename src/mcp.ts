@@ -1,10 +1,11 @@
 // MCP server (stdio, JSON-RPC 2.0, one message per line) for hosts that can't run shell commands themselves —
 // Claude Desktop, Cursor, Claude Code, Codex, … Zero dependencies.
 //
-// Every tool runs the backlog-bridge CLI as a child process, so the same guards apply (issue-key check, secret-file
+// Every tool runs the backlog-bridge CLI in a worker thread, so the same guards apply (issue-key check, secret-file
 // refusal, writes are dry runs until confirmed). Writes need `send: true`; sync is preview-only here.
-import { spawn } from "node:child_process";
 import path from "node:path";
+import { finished } from "node:stream/promises";
+import { Worker } from "node:worker_threads";
 import { reviewPrefs, VERSION } from "./config.ts";
 
 const EXT = import.meta.filename.endsWith(".ts") ? "ts" : "js";
@@ -17,17 +18,21 @@ interface ToolResult {
   isError?: boolean;
 }
 
-function run(script: string, args: string[]): Promise<ToolResult> {
-  return new Promise((resolve) => {
-    const child = spawn(process.execPath, [script, ...args], { stdio: ["ignore", "pipe", "pipe"] });
-    let out = "", err = "";
-    child.stdout.on("data", (d) => (out += d));
-    child.stderr.on("data", (d) => (err += d));
-    child.on("close", (code) => {
-      const text = [out.trim(), err.trim()].filter(Boolean).join("\n") || "(no output)";
-      resolve({ content: [{ type: "text", text }], isError: code !== 0 });
-    });
+// A worker thread, not a child process: Claude Desktop runs extensions on its built-in Node, where
+// process.execPath is the Claude app itself and can't be started as `node`. The worker still gets its own argv,
+// stdout/stderr and exit code, so the CLI behaves exactly as from a shell.
+async function run(script: string, args: string[]): Promise<ToolResult> {
+  const worker = new Worker(script, { argv: args, stdout: true, stderr: true });
+  let out = "", err = "";
+  worker.stdout.on("data", (d) => (out += d));
+  worker.stderr.on("data", (d) => (err += d));
+  const code = await new Promise<number>((resolve) => {
+    worker.on("error", (e) => (err += `Error: ${e.message}`));
+    worker.on("exit", resolve);
   });
+  await Promise.all([finished(worker.stdout), finished(worker.stderr)]).catch(() => {});
+  const text = [out.trim(), err.trim()].filter(Boolean).join("\n") || "(no output)";
+  return { content: [{ type: "text", text }], isError: code !== 0 };
 }
 
 // A value that becomes its own argv entry must not look like a flag: "PWM-1 --yes" as a ref would otherwise
