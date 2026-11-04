@@ -224,6 +224,9 @@ Each person sets how they review text before an agent sends it to a customer, in
 - `comment --file` refuses `.env*` files, `state/` directories and the config file (also through symlinks) — a
   prompt-injected agent can't post secrets.
 - Writes are dry runs until `--yes` (`backlog-bridge`) / `--live` (`progress`).
+- CI audits every agent-facing file (skills, `AGENTS.md`, plugin, MCP config) for hidden Unicode, secrets,
+  pipe-to-shell, prompt-injection phrasing and missing guardrails (`npm run audit:skills`), plus gitleaks, CodeQL,
+  `npm audit` and OpenSSF Scorecard. Report vulnerabilities privately: [SECURITY.md](SECURITY.md).
 
 ## Development
 
