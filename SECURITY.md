@@ -29,3 +29,6 @@ Only the latest release receives fixes.
   `npm audit`, dependency review and CodeQL.
 - [OpenSSF Scorecard](.github/workflows/scorecard.yml) and Dependabot for the supply chain.
 - npm releases are published from CI with Trusted Publishing and provenance — never from a laptop.
+- The Claude Desktop Extension (`.mcpb`) is built in CI and signed with a Sigstore build-provenance attestation
+  (`.mcpb.sigstore.json` next to it on each release). Verify a download with
+  `gh attestation verify backlog-bridge-<version>.mcpb --repo mickey-ichi/backlog-bridge`.

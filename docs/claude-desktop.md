@@ -108,6 +108,8 @@ How writes work:
 
 - **Update:** download the new `.mcpb` from Releases and install it again — it replaces the old version. Your data
   folder is kept.
+- **Verify (optional):** each `.mcpb` is built and signed by GitHub Actions. With the GitHub CLI:
+  `gh attestation verify backlog-bridge-<version>.mcpb --repo mickey-ichi/backlog-bridge`.
 - **Remove:** Settings → Extensions → Backlog Bridge → Uninstall. `~/.config/backlog-bridge` stays until you delete it.
 
 ## Troubleshooting

@@ -108,6 +108,8 @@ Cách ghi hoạt động:
 ## Cập nhật / gỡ
 
 - **Cập nhật:** tải file `.mcpb` mới trên Releases và cài lại — bản cũ được thay thế, thư mục dữ liệu giữ nguyên.
+- **Kiểm tra chữ ký (tuỳ chọn):** mỗi file `.mcpb` do GitHub Actions build và ký. Với GitHub CLI:
+  `gh attestation verify backlog-bridge-<version>.mcpb --repo mickey-ichi/backlog-bridge`.
 - **Gỡ:** Settings → Extensions → Backlog Bridge → Uninstall. `~/.config/backlog-bridge` vẫn còn cho tới khi bạn xoá.
 
 ## Xử lý sự cố
