@@ -15,6 +15,7 @@ const out = path.join(ROOT, "build", `backlog-bridge-${pkg.version}.mcpb`);
 fs.rmSync(stage, { recursive: true, force: true });
 fs.mkdirSync(stage, { recursive: true });
 fs.cpSync(path.join(ROOT, "dist"), path.join(stage, "dist"), { recursive: true });
+fs.copyFileSync(path.join(ROOT, "assets", "icon.png"), path.join(stage, "icon.png"));
 for (const f of ["LICENSE", "README.md", "CHANGELOG.md", "config.example.json"]) {
   fs.copyFileSync(path.join(ROOT, f), path.join(stage, f));
 }
@@ -41,6 +42,7 @@ const manifest = {
   support: "https://github.com/mickey-ichi/backlog-bridge/issues",
   license: "MIT",
   keywords: ["backlog", "nulab", "project-management", "multi-space"],
+  icon: "icon.png",
   server: {
     type: "node",
     entry_point: "dist/cli.js",

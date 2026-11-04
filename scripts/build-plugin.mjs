@@ -46,6 +46,8 @@ fs.copyFileSync(path.join(ROOT, ".env.example"), path.join(OUT, "server", "env.e
 fs.copyFileSync(path.join(ROOT, "config.example.json"), path.join(OUT, "server", "config.example.json"));
 write("server/package.json", json({ name: pkg.name, version: pkg.version, type: "module", license: pkg.license }));
 fs.copyFileSync(path.join(ROOT, "LICENSE"), path.join(OUT, "LICENSE"));
+// Listing icon: the directory reads .claude-plugin/icon.png (square PNG, 512–2048 px).
+fs.copyFileSync(path.join(ROOT, "assets", "icon.png"), path.join(OUT, ".claude-plugin", "icon.png"));
 
 // Skills: copies (symlinks aren't allowed), with a note mapping CLI commands to this plugin's MCP tools.
 const NOTE = `
