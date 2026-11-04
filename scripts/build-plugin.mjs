@@ -30,6 +30,9 @@ write(".claude-plugin/plugin.json", json({
   repository: "https://github.com/mickey-ichi/backlog-bridge",
   license: pkg.license,
   keywords: ["backlog", "nulab", "project-management", "multi-space"],
+  privacyPolicyUrl: "https://github.com/mickey-ichi/backlog-bridge/blob/main/plugin/README.md#privacy",
+  supportUrl: "https://github.com/mickey-ichi/backlog-bridge/issues",
+  documentationUrl: "https://github.com/mickey-ichi/backlog-bridge/blob/main/docs/claude-code.md",
 }));
 
 // Local stdio server: started as a plain file under ${CLAUDE_PLUGIN_ROOT} — no shell, no npx, no npm script.

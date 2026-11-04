@@ -15,5 +15,8 @@
     "nulab",
     "project-management",
     "multi-space"
-  ]
+  ],
+  "privacyPolicyUrl": "https://github.com/mickey-ichi/backlog-bridge/blob/main/plugin/README.md#privacy",
+  "supportUrl": "https://github.com/mickey-ichi/backlog-bridge/issues",
+  "documentationUrl": "https://github.com/mickey-ichi/backlog-bridge/blob/main/docs/claude-code.md"
 }
