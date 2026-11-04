@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#312E81"/>
+      <stop offset="1" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#g)"/>
+  <!-- ears with inner ear -->
+  <g>
+    <circle cx="290" cy="330" r="142" fill="#fff"/>
+    <circle cx="734" cy="330" r="142" fill="#fff"/>
+    <circle cx="290" cy="330" r="82" fill="#F9A8D4"/>
+    <circle cx="734" cy="330" r="82" fill="#F9A8D4"/>
+  </g>
+  <!-- head -->
+  <ellipse cx="512" cy="590" rx="290" ry="270" fill="#fff"/>
+  <!-- whiskers -->
+  <g stroke="#fff" stroke-width="18" stroke-linecap="round">
+    <path d="M 214 600 L 96 576"/>
+    <path d="M 214 650 L 96 660"/>
+    <path d="M 810 600 L 928 576"/>
+    <path d="M 810 650 L 928 660"/>
+  </g>
+  <!-- B -->
+  <text x="512" y="720" text-anchor="middle" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif"
+        font-weight="900" font-size="380" fill="url(#g)">B</text>
+</svg>
