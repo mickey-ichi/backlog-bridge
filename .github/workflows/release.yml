@@ -8,20 +8,23 @@ on:
     types: [published]
 
 permissions:
-  contents: write   # upload the .mcpb to the release
-  id-token: write   # npm Trusted Publishing
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # upload the .mcpb to the release
+      id-token: write   # npm Trusted Publishing
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: .nvmrc
+          # Node 24 bundles npm >= 11.5.1, which Trusted Publishing needs (no unpinned `npm install -g npm`).
+          node-version: 24
           cache: npm
           registry-url: https://registry.npmjs.org
-      - run: npm install -g npm@latest   # Trusted Publishing needs npm >= 11.5.1
+      - run: npm --version
       - run: npm ci
       - name: Tag matches package.json
         run: |
