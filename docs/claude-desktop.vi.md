@@ -8,6 +8,9 @@ nội bộ và space của khách — không cần mở terminal.
 Công cụ được đóng gói thành **Desktop Extension** (file `.mcpb`). Claude Desktop chạy nó bằng Node.js có sẵn bên
 trong app, nên **không cần cài Node, npm hay gì thêm**.
 
+Cài một lần là dùng được cho cả **Chat** và **Cowork** trong Claude Desktop. (Claude Code thì dùng CLI — xem
+[claude-code.vi.md](claude-code.vi.md).)
+
 ## Cần chuẩn bị
 
 - macOS với **Claude Desktop** bản mới
