@@ -8,6 +8,9 @@ internal space and your customers' — without a terminal.
 It ships as a **Desktop Extension** (`.mcpb` file). Claude Desktop runs it with its own built-in Node.js, so you
 don't need to install Node, npm or anything else.
 
+One install covers both **Chat** and **Cowork** in Claude Desktop. (Claude Code uses the CLI instead — see
+[claude-code.md](claude-code.md).)
+
 ## What you need
 
 - macOS with an up-to-date **Claude Desktop**
