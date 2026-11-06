@@ -125,3 +125,28 @@ MIT — see \`LICENSE\`.
 `);
 
 console.log(`plugin/ built (v${pkg.version})`);
+
+// Official MCP Registry entry (published by the Release workflow with mcp-publisher). The registry checks that the npm
+// package of this version carries the same `mcpName`.
+fs.writeFileSync(path.join(ROOT, "server.json"), json({
+  $schema: "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  name: pkg.mcpName,
+  title: "Backlog Bridge",
+  description: "Read and write many Backlog (Nulab) spaces at once: issues, comments, search, sync previews.",
+  repository: { url: "https://github.com/mickey-ichi/backlog-bridge", source: "github" },
+  websiteUrl: "https://github.com/mickey-ichi/backlog-bridge#readme",
+  version: pkg.version,
+  packages: [{
+    registryType: "npm",
+    identifier: pkg.name,
+    version: pkg.version,
+    transport: { type: "stdio" },
+    packageArguments: [{ type: "positional", value: "mcp" }],
+    environmentVariables: [{
+      name: "BACKLOG_BRIDGE_HOME",
+      description: "Folder with .env (one <PREFIX>_SPACE / <PREFIX>_API_KEY pair per space). Default: ~/.config/backlog-bridge",
+      isRequired: false,
+      format: "filepath",
+    }],
+  }],
+}));

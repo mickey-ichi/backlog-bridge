@@ -1,7 +1,8 @@
 {
   "name": "backlog-bridge",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Multi-space Backlog (Nulab) CLI for humans and AI agents, plus one-way sync between Backlog projects.",
+  "mcpName": "io.github.mickey-ichi/backlog-bridge",
   "license": "MIT",
   "homepage": "https://github.com/mickey-ichi/backlog-bridge#readme",
   "repository": {

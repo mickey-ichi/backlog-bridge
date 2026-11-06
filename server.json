@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mickey-ichi/backlog-bridge",
+  "title": "Backlog Bridge",
+  "description": "Read and write many Backlog (Nulab) spaces at once: issues, comments, search, sync previews.",
+  "repository": {
+    "url": "https://github.com/mickey-ichi/backlog-bridge",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/mickey-ichi/backlog-bridge#readme",
+  "version": "0.1.5",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "backlog-bridge",
+      "version": "0.1.5",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "BACKLOG_BRIDGE_HOME",
+          "description": "Folder with .env (one <PREFIX>_SPACE / <PREFIX>_API_KEY pair per space). Default: ~/.config/backlog-bridge",
+          "isRequired": false,
+          "format": "filepath"
+        }
+      ]
+    }
+  ]
+}
