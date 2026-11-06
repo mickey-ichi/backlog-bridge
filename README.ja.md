@@ -166,8 +166,15 @@ backlog-bridge sync --profile=<名前> [フラグ]
 
 **Claude Code（Claude アプリの Code タブ）：手順 — [docs/claude-code.md](docs/claude-code.md)（英語）。**
 
-**Claude プラグイン**（`plugin/`）：スキルと MCP サーバーをまとめたもので、Claude Code と Cowork 向けです。クローンで
-`claude --plugin-dir plugin` を実行して試せます。`PATH` に Node.js 20 以上が必要です。Claude アプリのチャットでは Desktop Extension を使います。
+**Claude プラグイン**（スキルと MCP サーバーをまとめたもので、Claude Code と Cowork 向け。`PATH` に Node.js 20 以上が必要）。このリポジトリ自体がマーケットプレイスです：
+
+```bash
+claude plugin marketplace add mickey-ichi/backlog-bridge
+claude plugin install backlog-bridge@backlog-bridge
+```
+
+Claude Team/Enterprise の組織全体では、オーナーが *Organization settings → Plugins & skills → Marketplaces* に
+`mickey-ichi/backlog-bridge` を追加します。Claude アプリのチャットでは Desktop Extension を使います。
 
 | エージェント | 読み込むもの |
 |---|---|

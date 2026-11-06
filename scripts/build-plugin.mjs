@@ -35,6 +35,26 @@ write(".claude-plugin/plugin.json", json({
   documentationUrl: "https://github.com/mickey-ichi/backlog-bridge/blob/main/docs/claude-code.md",
 }));
 
+// This repo is also a plugin marketplace (outside the Claude directory):
+//   claude plugin marketplace add mickey-ichi/backlog-bridge && claude plugin install backlog-bridge@backlog-bridge
+// Written at the repo root, next to plugin/, and kept in sync with package.json.
+fs.mkdirSync(path.join(ROOT, ".claude-plugin"), { recursive: true });
+fs.writeFileSync(path.join(ROOT, ".claude-plugin", "marketplace.json"), json({
+  name: "backlog-bridge",
+  owner: { name: "mickey-ichi", url: "https://github.com/mickey-ichi" },
+  metadata: { description: "Backlog Bridge for Claude Code and Cowork: skills + MCP server for many Backlog spaces." },
+  plugins: [{
+    name: "backlog-bridge",
+    source: "./plugin",
+    version: pkg.version,
+    description: "Read and write many Backlog (Nulab) spaces at once — previewed writes, customer review modes.",
+    author: { name: "mickey-ichi", url: "https://github.com/mickey-ichi" },
+    homepage: "https://github.com/mickey-ichi/backlog-bridge",
+    license: pkg.license,
+    keywords: ["backlog", "nulab", "project-management", "multi-space"],
+  }],
+}));
+
 // Local stdio server: started as a plain file under ${CLAUDE_PLUGIN_ROOT} — no shell, no npx, no npm script.
 write(".mcp.json", json({
   mcpServers: {

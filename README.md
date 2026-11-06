@@ -164,9 +164,16 @@ updated in place via a hidden marker.
 
 **Claude Code (the Code tab of the Claude app): step-by-step guide — [docs/claude-code.md](docs/claude-code.md).**
 
-**Claude plugin** (`plugin/`): the skills and the MCP server in one package for Claude Code and Cowork — try it with
-`claude --plugin-dir plugin` from a clone. It needs Node.js 20+ on `PATH`; chat in the Claude app uses the Desktop
-Extension instead.
+**Claude plugin** (skills + MCP server in one package, for Claude Code and Cowork; needs Node.js 20+ on `PATH`). This repo
+is its own plugin marketplace:
+
+```bash
+claude plugin marketplace add mickey-ichi/backlog-bridge
+claude plugin install backlog-bridge@backlog-bridge
+```
+
+For a whole Claude Team/Enterprise organization, an Owner adds `mickey-ichi/backlog-bridge` under *Organization settings →
+Plugins & skills → Marketplaces*. Chat in the Claude app uses the Desktop Extension instead.
 
 | Agent | Picks up |
 |---|---|

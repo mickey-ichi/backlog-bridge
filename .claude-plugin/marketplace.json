@@ -1,0 +1,30 @@
+{
+  "name": "backlog-bridge",
+  "owner": {
+    "name": "mickey-ichi",
+    "url": "https://github.com/mickey-ichi"
+  },
+  "metadata": {
+    "description": "Backlog Bridge for Claude Code and Cowork: skills + MCP server for many Backlog spaces."
+  },
+  "plugins": [
+    {
+      "name": "backlog-bridge",
+      "source": "./plugin",
+      "version": "0.1.4",
+      "description": "Read and write many Backlog (Nulab) spaces at once — previewed writes, customer review modes.",
+      "author": {
+        "name": "mickey-ichi",
+        "url": "https://github.com/mickey-ichi"
+      },
+      "homepage": "https://github.com/mickey-ichi/backlog-bridge",
+      "license": "MIT",
+      "keywords": [
+        "backlog",
+        "nulab",
+        "project-management",
+        "multi-space"
+      ]
+    }
+  ]
+}

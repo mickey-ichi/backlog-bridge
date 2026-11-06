@@ -166,9 +166,16 @@ An toàn: **mặc định chỉ xem trước** (`--live` mới ghi), `neverTouch
 
 **Claude Code (tab Code của app Claude): hướng dẫn từng bước — [docs/claude-code.vi.md](docs/claude-code.vi.md).**
 
-**Claude plugin** (`plugin/`): skill và MCP server gói chung cho Claude Code và Cowork — chạy thử bằng
-`claude --plugin-dir plugin` trong bản clone. Cần Node.js 20+ trong `PATH`; tab Chat của app Claude thì dùng Desktop
-Extension.
+**Claude plugin** (skill + MCP server gói chung, cho Claude Code và Cowork; cần Node.js 20+ trong `PATH`). Repo này là
+marketplace của chính nó:
+
+```bash
+claude plugin marketplace add mickey-ichi/backlog-bridge
+claude plugin install backlog-bridge@backlog-bridge
+```
+
+Cả tổ chức Claude Team/Enterprise: Owner thêm `mickey-ichi/backlog-bridge` ở *Organization settings → Plugins & skills →
+Marketplaces*. Tab Chat của app Claude thì dùng Desktop Extension.
 
 | Agent | Đọc |
 |---|---|
