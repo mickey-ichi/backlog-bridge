@@ -1,10 +1,25 @@
+<div align="center">
+
+<img alt="" src="https://raw.githubusercontent.com/mickey-ichi/backlog-bridge/main/assets/icon.png" width="104">
+
 # backlog-bridge
 
-[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge) [![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+**Một CLI và MCP server cho nhiều Backlog (Nulab) space cùng lúc — cho người và cho AI agent.**
+
+[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge)
+[![downloads](https://img.shields.io/npm/dm/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge)
+[![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+[![provenance](https://img.shields.io/badge/npm-provenance-2f6bff)](https://www.npmjs.com/package/backlog-bridge#provenance)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/mickey-ichi/backlog-bridge/badge)](https://scorecard.dev/viewer/?uri=github.com/mickey-ichi/backlog-bridge)
+[![license](https://img.shields.io/npm/l/backlog-bridge)](LICENSE)
+
+[npm](https://www.npmjs.com/package/backlog-bridge) ·
+[Nhật ký thay đổi](CHANGELOG.md) ·
+[Bảo mật](SECURITY.md)
 
 [English](README.md) · **Tiếng Việt** · [日本語](README.ja.md)
 
-Cầu nối tới **nhiều [Backlog](https://backlog.com) (Nulab) space cùng lúc** — cho người và cho AI agent.
+</div>
 
 - **`backlog-bridge`** — đọc/ghi issue, comment, tìm kiếm, activity trên mọi space đã nối, từ một CLI.
   Dán link Backlog là CLI tự chọn đúng space và API key.
