@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.7
+
+- Same contents as 0.1.6, which never reached npm: a Sigstore transparency-log outage broke its provenance
+  signing.
+
 ## 0.1.6
 
 - README (English, Tiếng Việt, 日本語): a centered header with the icon, a one-line summary and badges (npm, monthly

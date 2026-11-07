@@ -40,7 +40,7 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-特定のバージョン：`npm install -g backlog-bridge@0.1.6`。未リリースの `main` を GitHub から：
+特定のバージョン：`npm install -g backlog-bridge@0.1.7`。未リリースの `main` を GitHub から：
 `npm install -g --install-links github:mickey-ichi/backlog-bridge`（`--install-links` は npm 10 が一時クローンへのリンクではなく
 本体をコピーするため）。リリースノート：[CHANGELOG.md](CHANGELOG.md)。
 
