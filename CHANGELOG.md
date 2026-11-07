@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6
+
+- README (English, Tiếng Việt, 日本語): a centered header with the icon, a one-line summary and badges (npm, monthly
+  downloads, CI, provenance, OpenSSF Scorecard, license). No code changes.
+
 ## 0.1.5
 
 - Listed on the Official MCP Registry as `io.github.mickey-ichi/backlog-bridge`: `mcpName` in package.json,
