@@ -1,10 +1,25 @@
+<div align="center">
+
+<img alt="" src="https://raw.githubusercontent.com/mickey-ichi/backlog-bridge/main/assets/icon.png" width="104">
+
 # backlog-bridge
 
-[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge) [![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+**複数の Backlog（Nulab）スペースを同時に扱う CLI と MCP サーバー。人にも AI エージェントにも。**
+
+[![npm](https://img.shields.io/npm/v/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge)
+[![downloads](https://img.shields.io/npm/dm/backlog-bridge)](https://www.npmjs.com/package/backlog-bridge)
+[![CI](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/mickey-ichi/backlog-bridge/actions/workflows/ci.yml)
+[![provenance](https://img.shields.io/badge/npm-provenance-2f6bff)](https://www.npmjs.com/package/backlog-bridge#provenance)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/mickey-ichi/backlog-bridge/badge)](https://scorecard.dev/viewer/?uri=github.com/mickey-ichi/backlog-bridge)
+[![license](https://img.shields.io/npm/l/backlog-bridge)](LICENSE)
+
+[npm](https://www.npmjs.com/package/backlog-bridge) ·
+[変更履歴](CHANGELOG.md) ·
+[セキュリティ](SECURITY.md)
 
 [English](README.md) · [Tiếng Việt](README.vi.md) · **日本語**
 
-**複数の [Backlog](https://backlog.com)（Nulab）スペースを同時に扱う**ためのブリッジです。人にも AI エージェントにも使えます。
+</div>
 
 - **`backlog-bridge`** — 接続済みのどのスペースでも、課題・コメント・検索・アクティビティを 1 つの CLI で読み書きできます。
   Backlog の URL を貼るだけで、対応するスペースと API キーを自動で選びます。
