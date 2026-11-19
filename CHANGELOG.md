@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.8
+
+- Create and delete issues: `backlog-bridge create <space> <PROJECT> summary=...` and `backlog-bridge delete <ref>`,
+  plus the MCP tools `create_issue` and `delete_issue`. Both are dry runs until `--yes` / `send: true`; the delete
+  dry run shows the issue that would go.
+- `create` / `update` take `type`, `priority`, `category`, `milestone`, `version` and `parent` by name or key, besides
+  `status` and `assignee`; `--file` fills the description (with the same secret-file guard as `comment --file`).
+- The default statuses and priorities accept English, Japanese and Vietnamese names in any space
+  (`In Progress` = `処理中` = `Đang xử lý`). An unknown status now lists the project's real ones.
+- `search --open` hides the Closed status in every language (it matched only the English name before).
+
 ## 0.1.7
 
 - Same contents as 0.1.6, which never reached npm: a Sigstore transparency-log outage broke its provenance

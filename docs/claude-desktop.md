@@ -103,9 +103,9 @@ Just talk to Claude — paste links as they are:
 
 How writes work:
 
-- `add_comment` / `update_issue` first return a **dry run** — the exact request. Nothing is sent until you approve.
+- `add_comment` / `create_issue` / `update_issue` / `delete_issue` first return a **dry run** — the exact request. Nothing is sent until you approve.
 - Writing to a **customer's** space is always confirmed with you, in your review mode.
-- A customer's issue is never closed and nothing is ever deleted.
+- A customer's issue is never closed, and an issue is deleted only when you ask to delete that exact issue.
 
 ## Update or remove
 

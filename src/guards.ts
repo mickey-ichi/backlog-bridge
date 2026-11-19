@@ -11,6 +11,13 @@ export function checkKey(key: string): string {
   return key;
 }
 
+// A project key also goes into request paths (/projects/<key>/...).
+const PROJECT_KEY = /^[A-Z][A-Z0-9_]*$/;
+export function checkProjectKey(key: string): string {
+  if (!PROJECT_KEY.test(key)) throw new Error(`Invalid project key: "${key}" (expected e.g. DEV)`);
+  return key;
+}
+
 const realpath = (p: string) => { try { return fs.realpathSync(p); } catch { return undefined; } };
 
 // --file reads content to post to Backlog (possibly a customer space) and prints it in the DRY run. Block exactly

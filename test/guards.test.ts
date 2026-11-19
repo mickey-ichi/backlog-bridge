@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { checkKey, safeCommentFile } from "../src/guards.ts";
+import { checkKey, checkProjectKey, safeCommentFile } from "../src/guards.ts";
 
 test("checkKey: only PROJECT-123 shaped keys pass", () => {
   assert.equal(checkKey("DEV-42"), "DEV-42");
@@ -11,6 +11,11 @@ test("checkKey: only PROJECT-123 shaped keys pass", () => {
   for (const bad of ["../projects/X", "DEV-1/../../x", "dev-1", "DEV-", "DEV-1?x=1", ""]) {
     assert.throws(() => checkKey(bad), /invalid/i, bad);
   }
+});
+
+test("checkProjectKey: only DEV shaped keys pass", () => {
+  assert.equal(checkProjectKey("ACME_JP"), "ACME_JP");
+  for (const bad of ["../x", "DEV-1", "dev", "DEV/issues", ""]) assert.throws(() => checkProjectKey(bad), /invalid/i, bad);
 });
 
 // Fake home with .env, config.json, state/ and an ordinary draft (e.g. a home that is a team config repo).

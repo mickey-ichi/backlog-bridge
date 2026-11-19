@@ -1,11 +1,11 @@
 ---
 name: backlog-write
-description: Comment on, change status/assignee/due date of, or edit the summary of an issue on any connected Backlog space (internal or customer) via backlog-bridge, always previewing before writing. Use when the user says "comment on the customer ticket", "move this task to Resolved", "assign it to X", "change the due date", "post the translation to Backlog".
+description: Create, comment on, update (status, assignee, priority, due date, summary) or delete an issue on any connected Backlog space (internal or customer) via backlog-bridge, always previewing before writing. Use when the user says "create a task", "comment on the customer ticket", "move this task to Resolved", "assign it to X", "change the due date", "delete this issue", "post the translation to Backlog".
 ---
 
 > **Claude plugin:** when the `backlog-bridge` command isn't installed, use this plugin's MCP tools instead —
 > `list_spaces`, `home_info`, `create_data_folder`, `get_issue`, `get_comments`, `search_issues`,
-> `list_activities`, `list_projects`, `api_get`, `add_comment`, `update_issue`, `list_sync_profiles`,
+> `list_activities`, `list_projects`, `api_get`, `add_comment`, `create_issue`, `update_issue`, `delete_issue`, `list_sync_profiles`,
 > `sync_preview`. The same rules apply: writes return a preview first and are sent (`send: true`) only after the
 > user approves. Real sync runs need the CLI: `npm install -g backlog-bridge`.
 
@@ -53,7 +53,7 @@ backlog-bridge home  # line "review : …"
 **Not set** (`review : (not set …)`) → ask the user once which case applies, use it for this write, and tell them the
 line to add to their `.env` (`BACKLOG_BRIDGE_REVIEW=bilingual` or `=translate`). Never edit `.env` yourself.
 
-The same applies to other customer-facing text: issue summaries/descriptions written with `backlog-bridge update` or `backlog-bridge api`.
+The same applies to other customer-facing text: issue summaries/descriptions written with `backlog-bridge create`, `backlog-bridge update` or `backlog-bridge api`.
 
 ## Commands
 
@@ -62,10 +62,19 @@ The same applies to other customer-facing text: issue summaries/descriptions wri
 backlog-bridge comment <ref> --file=reply.txt
 backlog-bridge comment internal DEV-42 --text="Fixed, please re-test"
 
-# update — status/assignee by NAME (resolved to ids in the project); other fields go straight to API v2
+# create — type/priority/assignee/category/milestone by NAME; default type = the project's first, priority = Normal
+backlog-bridge create internal DEV summary="[BE] Login API" type=Task priority=High assignee=An dueDate=2026-12-01
+backlog-bridge create internal DEV summary="[FE] Login form" parent=DEV-42 --file=desc.md   # child issue, description from a file
+
+# update — status/assignee/priority/type by NAME (resolved to ids in the project); other fields go straight to API v2.
+# The default statuses accept English, Japanese or Vietnamese names (In Progress = 処理中 = Đang xử lý);
+# an unknown name lists the project's real ones.
 backlog-bridge update <ref> status=Resolved
 backlog-bridge update <ref> assignee=An dueDate=2026-10-30
 backlog-bridge update <ref> summary="ACME-123 [impl] ..."
+
+# delete — cannot be undone; the dry run shows the issue that would go
+backlog-bridge delete <ref>
 
 # any other endpoint (wiki, links, …)
 backlog-bridge api <space> POST /wikis projectId=12345 name="Release note" content="..."
@@ -78,5 +87,7 @@ Append `--yes` to actually send.
 ## Don't
 
 - Don't create or delete issues in bulk by hand — mirroring is `backlog-bridge sync` (skill `backlog-sync`).
+- Don't create issues in a customer's space unless the user asked for exactly that; the summary and description follow
+  the review mode above.
 - Don't close (`Closed`) a customer's issue — the customer closes it; go up to `Resolved` at most.
-- Don't delete issues or comments (API `DELETE`) unless the user names that exact item.
+- Don't delete issues or comments unless the user names that exact item; show the dry run and get a clear yes first.
