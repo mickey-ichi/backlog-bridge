@@ -53,6 +53,8 @@ test("tools/list: writes are not marked read-only", async () => {
   assert.ok(byName.get_issue.annotations.readOnlyHint);
   assert.equal(byName.add_comment.annotations.readOnlyHint, false);
   assert.ok(byName.update_issue.annotations.destructiveHint);
+  assert.equal(byName.create_issue.annotations.readOnlyHint, false);
+  assert.ok(byName.delete_issue.annotations.destructiveHint);
   assert.ok(byName.sync_preview.annotations.readOnlyHint);
 });
 
@@ -61,6 +63,9 @@ test("flag smuggling through ref / field names is rejected", async () => {
     ["add_comment", { ref: "internal DEV-1 --yes", content: "x" }],
     ["update_issue", { ref: "internal DEV-1", fields: { "--yes": "1" } }],
     ["search_issues", { space: "--yes", project: "DEV" }],
+    ["create_issue", { space: "--yes", project: "DEV", summary: "x" }],
+    ["create_issue", { space: "internal", project: "DEV", summary: "x", fields: { "--yes": "1" } }],
+    ["delete_issue", { ref: "internal DEV-1 --yes" }],
   ] as const) {
     const r = await callTool(name, args);
     assert.equal(r.result.isError, true, name);

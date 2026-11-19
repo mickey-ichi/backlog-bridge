@@ -10,6 +10,13 @@ export function checkKey(key) {
         throw new Error(`Invalid issue key: "${key}" (expected PROJECT-123)`);
     return key;
 }
+// A project key also goes into request paths (/projects/<key>/...).
+const PROJECT_KEY = /^[A-Z][A-Z0-9_]*$/;
+export function checkProjectKey(key) {
+    if (!PROJECT_KEY.test(key))
+        throw new Error(`Invalid project key: "${key}" (expected e.g. DEV)`);
+    return key;
+}
 const realpath = (p) => { try {
     return fs.realpathSync(p);
 }

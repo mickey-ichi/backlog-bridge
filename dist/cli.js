@@ -12,7 +12,9 @@
 //   backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
 //   backlog-bridge activities <space> [--project=KEY] [--count=20]
 //   backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
-//   backlog-bridge update <ref> field=value ... [--yes]  # status=<name> assignee=<name> dueDate=.. summary=..
+//   backlog-bridge create <space> <PROJECT> summary=.. [type=<name>] [priority=<name>] [assignee=<name>] [parent=<KEY>] [description=..|--file=path] [dueDate=..] ... [--yes]
+//   backlog-bridge update <ref> field=value ... [--yes]  # status=<name> assignee=<name> priority=<name> dueDate=.. summary=..
+//   backlog-bridge delete <ref> [--yes]                  # deletes the issue — cannot be undone
 //   backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]
 //   backlog-bridge mcp [--config]                        # MCP server on stdio (Claude Desktop, Cursor, …); --config prints setup
 //   backlog-bridge sync [--list | --profile=<name> ...]
@@ -26,7 +28,8 @@ import os from "node:os";
 import path from "node:path";
 import { ROOT, DEFAULT_HOME, LEGACY_HOME, VERSION, setting, reviewPrefs, homeDir, configPath, envFiles, looseEnvFiles, loadEnv, loadConfig, allSpaces, hostOf, hasFlag, argValue, } from "./config.js";
 import { BacklogClient } from "./backlog.js";
-import { checkKey, safeCommentFile } from "./guards.js";
+import { checkKey, checkProjectKey, safeCommentFile } from "./guards.js";
+import { findNamed, findPriority, findStatus, norm } from "./names.js";
 loadEnv();
 const config = loadConfig();
 const SPACES = allSpaces(config);
@@ -116,7 +119,6 @@ function kv(args) {
     }
     return out;
 }
-const norm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase();
 async function findUser(bl, projectKey, name) {
     if (name === "me")
         return bl.getMyself();
@@ -126,6 +128,34 @@ async function findUser(bl, projectKey, name) {
         throw new Error(`assignee "${name}" matches ${hits.length} people in ${projectKey}: ${hits.map((u) => u.name).join(", ") || "-"}`);
     }
     return hits[0];
+}
+// Friendly names -> API v2 fields for create / update. Other keys go to the API as-is.
+async function resolveFields(bl, projectKey, args) {
+    const { status, assignee, priority, type, category, milestone, version, parent, ...raw } = args;
+    const fields = raw;
+    const one = (v) => String(Array.isArray(v) ? v[0] : v);
+    const many = (v) => [].concat(v);
+    if (status)
+        fields.statusId = findStatus(await bl.getStatuses(projectKey), one(status), projectKey).id;
+    if (assignee)
+        fields.assigneeId = (await findUser(bl, projectKey, one(assignee))).id;
+    if (priority)
+        fields.priorityId = findPriority(await bl.getPriorities(), one(priority)).id;
+    if (type)
+        fields.issueTypeId = findNamed(await bl.getIssueTypes(projectKey), one(type), "issue type", projectKey).id;
+    if (category) {
+        const list = await bl.getCategories(projectKey);
+        fields.categoryId = many(category).map((c) => findNamed(list, c, "category", projectKey).id);
+    }
+    for (const [key, value] of [["milestoneId", milestone], ["versionId", version]]) {
+        if (!value)
+            continue;
+        const list = await bl.getVersions(projectKey);
+        fields[key] = many(value).map((v) => findNamed(list, v, "milestone/version", projectKey).id);
+    }
+    if (parent)
+        fields.parentIssueId = (await bl.getIssue(checkKey(one(parent)))).id;
+    return fields;
 }
 // --- backlog-bridge setup: global install ------------------------------------------------------------
 // Canonical skills live in ~/.agents/skills (Agent Skills standard: read by Codex + Cursor), then are
@@ -396,7 +426,7 @@ const COMMANDS = {
             params.assigneeId = [(await findUser(bl, projectKey, assignee)).id];
         if (hasFlag("open")) {
             const statuses = await bl.getStatuses(projectKey);
-            params.statusId = statuses.filter((s) => s.name !== "Closed").map((s) => s.id);
+            params.statusId = statuses.filter((s) => s.id !== 4).map((s) => s.id); // 4 = Closed / 完了 in every space
         }
         const list = await bl.request("GET", "/issues", { params });
         print(list, (l) => l.map(issueLine).join("\n") || "(no issues)");
@@ -424,23 +454,56 @@ const COMMANDS = {
         if (res)
             console.log(`Posted comment #${res.id} on ${space} ${key}`);
     },
+    async create([space, projectKey, ...rest]) {
+        if (!space || !projectKey)
+            throw new Error("create <space> <PROJECT> summary=... [type=..] [priority=..] [assignee=..]");
+        checkProjectKey(projectKey);
+        const bl = client(space);
+        const args = kv(rest);
+        const file = argValue("file");
+        if (file)
+            args.description = fs.readFileSync(safeCommentFile(file), "utf8");
+        if (!args.summary)
+            throw new Error("Missing summary=...");
+        if (args.status)
+            throw new Error("A new issue always starts as the first status; set status=... with update afterwards");
+        const project = await bl.getProject(projectKey);
+        const fields = await resolveFields(bl, projectKey, args);
+        fields.projectId = project.id;
+        // Backlog requires an issue type and a priority: default to the project's first type and "Normal".
+        fields.issueTypeId ??= (await bl.getIssueTypes(projectKey))[0]?.id;
+        fields.priorityId ??= findPriority(await bl.getPriorities(), "normal").id;
+        const res = await write(space, "POST", "/issues", fields);
+        if (res)
+            console.log(`Created ${space} ${res.issueKey}: https://${bl.host}/view/${res.issueKey}\n${issueLine(res)}`);
+    },
     async update(args) {
         const { space, key, rest } = resolveRef(args);
-        const { status, assignee, ...raw } = kv(rest);
-        const fields = raw;
         const bl = client(space);
-        const projectKey = key.replace(/-\d+$/, "");
-        if (status) {
-            const st = (await bl.getStatuses(projectKey)).find((s) => norm(s.name) === norm(String(status)));
-            if (!st)
-                throw new Error(`${projectKey} has no status "${status}"`);
-            fields.statusId = st.id;
-        }
-        if (assignee)
-            fields.assigneeId = (await findUser(bl, projectKey, String(assignee))).id;
+        const kvs = kv(rest);
+        const file = argValue("file");
+        if (file)
+            kvs.description = fs.readFileSync(safeCommentFile(file), "utf8");
+        if (!Object.keys(kvs).length)
+            throw new Error("Nothing to update: pass field=value ...");
+        const fields = await resolveFields(bl, key.replace(/-\d+$/, ""), kvs);
         const res = await write(space, "PATCH", `/issues/${key}`, fields);
         if (res)
             console.log(`Updated ${space} ${res.issueKey}: ${issueLine(res)}`);
+    },
+    async delete(args) {
+        const { space, key } = resolveRef(args);
+        const bl = client(space);
+        const issue = await bl.getIssue(key); // fails early on a wrong key, and shows what would go
+        if (!YES) {
+            console.log(`[DRY] ${space}: DELETE /issues/${key} — cannot be undone`);
+            console.log(issueLine(issue));
+            console.log(`https://${bl.host}/view/${key}`);
+            console.log("→ add --yes to actually delete.");
+            return;
+        }
+        const res = await bl.request("DELETE", `/issues/${key}`);
+        console.log(`Deleted ${space} ${res.issueKey}: ${res.summary}`);
     },
     async api([space, rawMethod, path, ...rest]) {
         if (!space || !rawMethod || !path)

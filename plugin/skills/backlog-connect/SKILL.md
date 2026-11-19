@@ -5,7 +5,7 @@ description: Connect another Backlog space (e.g. a new customer's xxx.backlog.jp
 
 > **Claude plugin:** when the `backlog-bridge` command isn't installed, use this plugin's MCP tools instead —
 > `list_spaces`, `home_info`, `create_data_folder`, `get_issue`, `get_comments`, `search_issues`,
-> `list_activities`, `list_projects`, `api_get`, `add_comment`, `update_issue`, `list_sync_profiles`,
+> `list_activities`, `list_projects`, `api_get`, `add_comment`, `create_issue`, `update_issue`, `delete_issue`, `list_sync_profiles`,
 > `sync_preview`. The same rules apply: writes return a preview first and are sent (`send: true`) only after the
 > user approves. Real sync runs need the CLI: `npm install -g backlog-bridge`.
 

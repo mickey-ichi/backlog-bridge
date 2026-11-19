@@ -103,10 +103,10 @@ Cứ nói chuyện với Claude — dán link nguyên như vậy:
 
 Cách ghi hoạt động:
 
-- `add_comment` / `update_issue` luôn trả về **bản xem trước** (đúng request sẽ gửi) trước; chưa gửi gì cho tới khi
+- `add_comment` / `create_issue` / `update_issue` / `delete_issue` luôn trả về **bản xem trước** (đúng request sẽ gửi) trước; chưa gửi gì cho tới khi
   bạn đồng ý.
 - Ghi lên space **của khách** luôn được hỏi lại, theo chế độ duyệt của bạn.
-- Không bao giờ đóng (Closed) issue của khách, không bao giờ xoá gì.
+- Không bao giờ đóng (Closed) issue của khách; chỉ xoá issue khi bạn yêu cầu xoá đúng issue đó.
 
 ## Cập nhật / gỡ
 
