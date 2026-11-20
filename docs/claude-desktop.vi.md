@@ -103,10 +103,12 @@ Cứ nói chuyện với Claude — dán link nguyên như vậy:
 
 Cách ghi hoạt động:
 
-- `add_comment` / `create_issue` / `update_issue` / `delete_issue` luôn trả về **bản xem trước** (đúng request sẽ gửi) trước; chưa gửi gì cho tới khi
+- `add_comment` / `update_comment` / `delete_comment` / `create_issue` / `update_issue` / `delete_issue` / `delete_attachment` luôn trả về **bản xem trước** (đúng request sẽ gửi) trước; chưa gửi gì cho tới khi
   bạn đồng ý.
 - Ghi lên space **của khách** luôn được hỏi lại, theo chế độ duyệt của bạn.
 - Không bao giờ đóng (Closed) issue của khách; chỉ xoá issue khi bạn yêu cầu xoá đúng issue đó.
+
+Danh sách đầy đủ các tool và tham số: [mcp-tools.vi.md](mcp-tools.vi.md).
 
 ## Cập nhật / gỡ
 

@@ -65,3 +65,31 @@ test("errors with a non-JSON body (HTML error page) are summarized, not dumped",
     return true;
   });
 });
+
+test("upload: multipart field 'file' with the file name, apiKey in the query", async (t) => {
+  const calls = capture(t, 200, JSON.stringify({ id: 9, name: "a.png", size: 3 }));
+  const res = await client().upload("a.png", new Uint8Array([1, 2, 3]));
+  assert.equal(res.id, 9);
+  assert.equal(new URL(calls[0].url).pathname, "/api/v2/space/attachment");
+  const file = (calls[0].init.body as FormData).get("file") as File;
+  assert.equal(file.name, "a.png");
+  assert.equal(file.size, 3);
+});
+
+test("download: bytes and the UTF-8 file name from Content-Disposition", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => new Response(new Uint8Array([7, 8]), {
+    headers: { "content-disposition": "attachment; filename=\"x.png\"; filename*=UTF-8''%E7%94%BB%E5%83%8F.png" },
+  }));
+  const { name, data } = await client().download("/issues/DEV-1/attachments/5");
+  assert.equal(name, "画像.png");
+  assert.deepEqual([...data], [7, 8]);
+});
+
+test("download: an error is reported like other calls, without the API key", async (t) => {
+  capture(t, 404, JSON.stringify({ errors: [{ message: "No attachment." }] }));
+  await assert.rejects(client().download("/issues/DEV-1/attachments/5"), (err: Error) => {
+    assert.match(err.message, /GET \/issues\/DEV-1\/attachments\/5 -> 404: No attachment\./);
+    assert.doesNotMatch(err.message, /SECRET/);
+    return true;
+  });
+});

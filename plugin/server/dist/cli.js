@@ -11,9 +11,14 @@
 //   backlog-bridge comments <ref> [--count=20]
 //   backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
 //   backlog-bridge activities <space> [--project=KEY] [--count=20]
-//   backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
-//   backlog-bridge create <space> <PROJECT> summary=.. [type=<name>] [priority=<name>] [assignee=<name>] [parent=<KEY>] [description=..|--file=path] [dueDate=..] ... [--yes]
-//   backlog-bridge update <ref> field=value ... [--yes]  # status=<name> assignee=<name> priority=<name> dueDate=.. summary=..
+//   backlog-bridge comment <ref> (--text=..|--file=path) [--attach=path ...] [--yes]
+//   backlog-bridge comment-edit <ref> <commentId> (--text=..|--file=path) [--yes]
+//   backlog-bridge comment-delete <ref> <commentId> [--yes]
+//   backlog-bridge attachments <ref>                     # files attached to the issue
+//   backlog-bridge attachment-get <ref> <attachmentId> [--out=dir]   # download (default: a temp folder)
+//   backlog-bridge attachment-delete <ref> <attachmentId> [--yes]
+//   backlog-bridge create <space> <PROJECT> summary=.. [type=<name>] [priority=<name>] [assignee=<name>] [parent=<KEY>] [description=..|--file=path] [dueDate=..] [--attach=path ...] [--yes]
+//   backlog-bridge update <ref> field=value ... [--attach=path ...] [--yes]  # status=<name> assignee=<name> priority=<name> dueDate=.. summary=..
 //   backlog-bridge delete <ref> [--yes]                  # deletes the issue — cannot be undone
 //   backlog-bridge api <space> <METHOD> <path> [k=v ...] [--yes]
 //   backlog-bridge mcp [--config]                        # MCP server on stdio (Claude Desktop, Cursor, …); --config prints setup
@@ -106,6 +111,31 @@ async function write(space, method, path, body) {
         return null;
     }
     return client(space).request(method, path, { body });
+}
+// --name=value given several times -> all values.
+const argValues = (name) => process.argv.filter((a) => a.startsWith(`--${name}=`)).map((a) => a.slice(name.length + 3));
+const ID = /^\d+$/;
+function checkId(id, what) {
+    if (!id || !ID.test(id))
+        throw new Error(`Invalid ${what}: "${id ?? ""}" (expected a number)`);
+    return id;
+}
+const kb = (n) => (n < 1024 * 1024 ? `${Math.ceil(n / 1024)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`);
+// --attach=path: files to upload and attach (issue create/update, comment). They are uploaded only when sending;
+// the dry run lists them. Same guard as --file: secrets / private data are never uploaded.
+async function attachFiles(space, fields) {
+    const files = argValues("attach").map((f) => safeCommentFile(f));
+    if (!files.length)
+        return;
+    if (!YES) {
+        fields.attachmentId = files.map((f) => `<upload ${path.basename(f)}, ${kb(fs.statSync(f).size)}>`);
+        return;
+    }
+    const bl = client(space);
+    const ids = [];
+    for (const f of files)
+        ids.push((await bl.upload(path.basename(f), new Uint8Array(fs.readFileSync(f)))).id);
+    fields.attachmentId = ids;
 }
 // k=v ... -> object; repeated keys become an array.
 function kv(args) {
@@ -450,7 +480,9 @@ const COMMANDS = {
         const content = argValue("text") ?? (file && fs.readFileSync(safeCommentFile(file), "utf8"));
         if (!content)
             throw new Error("Missing --text=... or --file=path");
-        const res = await write(space, "POST", `/issues/${key}/comments`, { content });
+        const fields = { content };
+        await attachFiles(space, fields);
+        const res = await write(space, "POST", `/issues/${key}/comments`, fields);
         if (res)
             console.log(`Posted comment #${res.id} on ${space} ${key}`);
     },
@@ -473,6 +505,7 @@ const COMMANDS = {
         // Backlog requires an issue type and a priority: default to the project's first type and "Normal".
         fields.issueTypeId ??= (await bl.getIssueTypes(projectKey))[0]?.id;
         fields.priorityId ??= findPriority(await bl.getPriorities(), "normal").id;
+        await attachFiles(space, fields);
         const res = await write(space, "POST", "/issues", fields);
         if (res)
             console.log(`Created ${space} ${res.issueKey}: https://${bl.host}/view/${res.issueKey}\n${issueLine(res)}`);
@@ -484,9 +517,10 @@ const COMMANDS = {
         const file = argValue("file");
         if (file)
             kvs.description = fs.readFileSync(safeCommentFile(file), "utf8");
-        if (!Object.keys(kvs).length)
-            throw new Error("Nothing to update: pass field=value ...");
+        if (!Object.keys(kvs).length && !argValues("attach").length)
+            throw new Error("Nothing to update: pass field=value ... or --attach=path");
         const fields = await resolveFields(bl, key.replace(/-\d+$/, ""), kvs);
+        await attachFiles(space, fields);
         const res = await write(space, "PATCH", `/issues/${key}`, fields);
         if (res)
             console.log(`Updated ${space} ${res.issueKey}: ${issueLine(res)}`);
@@ -504,6 +538,69 @@ const COMMANDS = {
         }
         const res = await bl.request("DELETE", `/issues/${key}`);
         console.log(`Deleted ${space} ${res.issueKey}: ${res.summary}`);
+    },
+    async "comment-edit"(args) {
+        const { space, key, rest } = resolveRef(args);
+        const id = checkId(rest[0], "comment id");
+        const file = argValue("file");
+        const content = argValue("text") ?? (file && fs.readFileSync(safeCommentFile(file), "utf8"));
+        if (!content)
+            throw new Error("Missing --text=... or --file=path");
+        const old = await client(space).request("GET", `/issues/${key}/comments/${id}`);
+        if (!YES)
+            console.log(`Current comment #${id} by ${old.createdUser?.name}:\n${old.content}\n`);
+        const res = await write(space, "PATCH", `/issues/${key}/comments/${id}`, { content });
+        if (res)
+            console.log(`Edited comment #${res.id} on ${space} ${key}`);
+    },
+    async "comment-delete"(args) {
+        const { space, key, rest } = resolveRef(args);
+        const id = checkId(rest[0], "comment id");
+        const bl = client(space);
+        const old = await bl.request("GET", `/issues/${key}/comments/${id}`);
+        if (!YES) {
+            console.log(`[DRY] ${space}: DELETE /issues/${key}/comments/${id} — cannot be undone`);
+            console.log(`#${id} ${old.createdUser?.name} ${old.created}\n${old.content}`);
+            console.log("→ add --yes to actually delete.");
+            return;
+        }
+        await bl.request("DELETE", `/issues/${key}/comments/${id}`);
+        console.log(`Deleted comment #${id} on ${space} ${key}`);
+    },
+    async attachments(args) {
+        const { space, key } = resolveRef(args);
+        const list = await client(space).request("GET", `/issues/${key}/attachments`);
+        print(list, (l) => l.map((a) => `#${a.id}  ${a.name}  ${kb(a.size)}  ${a.createdUser?.name || ""}  ${short(a.created)}`).join("\n") || "(no attachments)");
+    },
+    async "attachment-get"(args) {
+        const { space, key, rest } = resolveRef(args);
+        const id = checkId(rest[0], "attachment id");
+        const { name, data } = await client(space).download(`/issues/${key}/attachments/${id}`);
+        // Default: a fresh private folder (mkdtemp, mode 0700) so nobody else on the machine can pre-create the path.
+        const out = argValue("out");
+        const dir = out ? path.resolve(out) : fs.mkdtempSync(path.join(os.tmpdir(), `backlog-bridge-${space}-${key}-`));
+        if (out)
+            fs.mkdirSync(dir, { recursive: true });
+        // Only the base name, without path separators or a leading dot, so a crafted name can't escape the folder.
+        const file = path.join(dir, path.basename(name).replace(/^\.+/, "_") || `attachment-${id}`);
+        fs.writeFileSync(file, data, { flag: out ? "w" : "wx", mode: 0o600 });
+        console.log(`Saved ${space} ${key} attachment #${id}: ${file} (${kb(data.length)})`);
+    },
+    async "attachment-delete"(args) {
+        const { space, key, rest } = resolveRef(args);
+        const id = checkId(rest[0], "attachment id");
+        const bl = client(space);
+        const hit = (await bl.request("GET", `/issues/${key}/attachments`)).find((a) => String(a.id) === id);
+        if (!hit)
+            throw new Error(`${key} has no attachment #${id}`);
+        if (!YES) {
+            console.log(`[DRY] ${space}: DELETE /issues/${key}/attachments/${id} — cannot be undone`);
+            console.log(`#${hit.id}  ${hit.name}  ${kb(hit.size)}`);
+            console.log("→ add --yes to actually delete.");
+            return;
+        }
+        await bl.request("DELETE", `/issues/${key}/attachments/${id}`);
+        console.log(`Deleted attachment #${id} (${hit.name}) on ${space} ${key}`);
     },
     async api([space, rawMethod, path, ...rest]) {
         if (!space || !rawMethod || !path)

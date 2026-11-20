@@ -55,6 +55,11 @@ test("tools/list: writes are not marked read-only", async () => {
   assert.ok(byName.update_issue.annotations.destructiveHint);
   assert.equal(byName.create_issue.annotations.readOnlyHint, false);
   assert.ok(byName.delete_issue.annotations.destructiveHint);
+  assert.ok(byName.delete_comment.annotations.destructiveHint);
+  assert.ok(byName.update_comment.annotations.destructiveHint);
+  assert.ok(byName.delete_attachment.annotations.destructiveHint);
+  assert.ok(byName.list_attachments.annotations.readOnlyHint);
+  assert.ok(byName.download_attachment.annotations.readOnlyHint);
   assert.ok(byName.sync_preview.annotations.readOnlyHint);
 });
 
@@ -66,6 +71,10 @@ test("flag smuggling through ref / field names is rejected", async () => {
     ["create_issue", { space: "--yes", project: "DEV", summary: "x" }],
     ["create_issue", { space: "internal", project: "DEV", summary: "x", fields: { "--yes": "1" } }],
     ["delete_issue", { ref: "internal DEV-1 --yes" }],
+    ["delete_comment", { ref: "internal DEV-1", comment_id: "--yes" }],
+    ["update_comment", { ref: "internal DEV-1", comment_id: "--yes", content: "x" }],
+    ["delete_attachment", { ref: "internal DEV-1", attachment_id: "--yes" }],
+    ["add_comment", { ref: "internal DEV-1", content: "x", attachments: ["--yes"] }],
   ] as const) {
     const r = await callTool(name, args);
     assert.equal(r.result.isError, true, name);
@@ -95,4 +104,12 @@ test("create_data_folder: creates the folder with a private sample .env, never o
   fs.appendFileSync(env, "\nMARKER=1\n");
   await callTool("create_data_folder");
   assert.match(fs.readFileSync(env, "utf8"), /MARKER=1/);
+});
+
+test("docs/mcp-tools*.md list every tool", async () => {
+  const { TOOLS } = await import("../src/mcp.ts");
+  for (const doc of ["mcp-tools.md", "mcp-tools.vi.md", "mcp-tools.ja.md"]) {
+    const text = fs.readFileSync(path.join(import.meta.dirname, "..", "docs", doc), "utf8");
+    for (const t of TOOLS) assert.match(text, new RegExp("\\| `" + t.name + "` \\|"), `${doc}: ${t.name}`);
+  }
 });

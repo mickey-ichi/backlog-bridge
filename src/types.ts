@@ -44,6 +44,14 @@ export interface Issue {
   milestone?: Named[];
 }
 
+export interface Attachment {
+  id: number;
+  name: string;
+  size: number;
+  created?: string;
+  createdUser?: User;
+}
+
 export interface Comment {
   id: number;
   content: string | null;

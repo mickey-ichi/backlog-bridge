@@ -1,7 +1,7 @@
 // Backlog REST API v2 client (zero dependency, Node global fetch)
 // Docs: https://developer.nulab.com/docs/backlog/
 import type {
-  Comment, Credentials, CustomField, Issue, Named, Params, Project, Status, User,
+  Attachment, Comment, Credentials, CustomField, Issue, Named, Params, Project, Status, User,
 } from "./types.ts";
 
 export interface RequestOptions {
@@ -54,7 +54,10 @@ export class BacklogClient {
       init.body = form;
       init.headers = { "Content-Type": "application/x-www-form-urlencoded" };
     }
-    const res = await fetch(url, init);
+    return this.#json<T>(await fetch(url, init), method, path);
+  }
+
+  async #json<T>(res: Response, method: string, path: string): Promise<T> {
     const text = await res.text();
     let data: any = null;
     try { data = text ? JSON.parse(text) : null; } catch { /* keep raw */ }
@@ -66,6 +69,26 @@ export class BacklogClient {
       throw new Error(`Backlog ${method} ${path} -> ${res.status}: ${msg}`);
     }
     return data as T;
+  }
+
+  // Upload a file to the space (multipart, field "file"). The returned id is then passed as attachmentId[] to
+  // create/update issue or add comment, which attaches it.
+  async upload(name: string, data: Uint8Array<ArrayBuffer>): Promise<Attachment> {
+    const form = new FormData();
+    form.append("file", new Blob([data]), name);
+    const path = "/space/attachment";
+    return this.#json<Attachment>(await fetch(this.#url(path), { method: "POST", body: form }), "POST", path);
+  }
+
+  // Download a binary endpoint (issue attachment). The file name comes from Content-Disposition.
+  async download(path: string): Promise<{ name: string; data: Uint8Array }> {
+    const res = await fetch(this.#url(path));
+    if (!res.ok) await this.#json(res, "GET", path);
+    const cd = res.headers.get("content-disposition") || "";
+    const star = cd.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    const plain = cd.match(/filename="?([^";]+)"?/i)?.[1];
+    const name = star ? decodeURIComponent(star) : plain || "attachment";
+    return { name, data: new Uint8Array(await res.arrayBuffer()) };
   }
 
   // Generic escape hatch for the multi-space CLI (src/cli.ts) — call any API v2 endpoint.

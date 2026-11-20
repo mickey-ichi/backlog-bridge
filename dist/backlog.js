@@ -48,7 +48,9 @@ export class BacklogClient {
             init.body = form;
             init.headers = { "Content-Type": "application/x-www-form-urlencoded" };
         }
-        const res = await fetch(url, init);
+        return this.#json(await fetch(url, init), method, path);
+    }
+    async #json(res, method, path) {
         const text = await res.text();
         let data = null;
         try {
@@ -63,6 +65,25 @@ export class BacklogClient {
             throw new Error(`Backlog ${method} ${path} -> ${res.status}: ${msg}`);
         }
         return data;
+    }
+    // Upload a file to the space (multipart, field "file"). The returned id is then passed as attachmentId[] to
+    // create/update issue or add comment, which attaches it.
+    async upload(name, data) {
+        const form = new FormData();
+        form.append("file", new Blob([data]), name);
+        const path = "/space/attachment";
+        return this.#json(await fetch(this.#url(path), { method: "POST", body: form }), "POST", path);
+    }
+    // Download a binary endpoint (issue attachment). The file name comes from Content-Disposition.
+    async download(path) {
+        const res = await fetch(this.#url(path));
+        if (!res.ok)
+            await this.#json(res, "GET", path);
+        const cd = res.headers.get("content-disposition") || "";
+        const star = cd.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+        const plain = cd.match(/filename="?([^";]+)"?/i)?.[1];
+        const name = star ? decodeURIComponent(star) : plain || "attachment";
+        return { name, data: new Uint8Array(await res.arrayBuffer()) };
     }
     // Generic escape hatch for the multi-space CLI (src/cli.ts) — call any API v2 endpoint.
     request(method, path, opts) {

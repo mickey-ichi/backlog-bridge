@@ -103,9 +103,11 @@ Just talk to Claude — paste links as they are:
 
 How writes work:
 
-- `add_comment` / `create_issue` / `update_issue` / `delete_issue` first return a **dry run** — the exact request. Nothing is sent until you approve.
+- `add_comment` / `update_comment` / `delete_comment` / `create_issue` / `update_issue` / `delete_issue` / `delete_attachment` first return a **dry run** — the exact request. Nothing is sent until you approve.
 - Writing to a **customer's** space is always confirmed with you, in your review mode.
 - A customer's issue is never closed, and an issue is deleted only when you ask to delete that exact issue.
+
+All tools and their parameters: [mcp-tools.md](mcp-tools.md).
 
 ## Update or remove
 

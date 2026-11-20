@@ -38,7 +38,7 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-A specific version: `npm install -g backlog-bridge@0.1.8`. Unreleased `main` from GitHub:
+A specific version: `npm install -g backlog-bridge@0.1.9`. Unreleased `main` from GitHub:
 `npm install -g --install-links github:mickey-ichi/backlog-bridge` (`--install-links` makes npm 10 copy the package
 instead of linking to a temporary clone). Release notes: [CHANGELOG.md](CHANGELOG.md).
 
@@ -104,7 +104,12 @@ backlog-bridge issue <ref>                                    # <ref> = URL | <s
 backlog-bridge comments <ref> [--count=20]
 backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|name] [--open] [--count=50]
 backlog-bridge activities <space> [--project=KEY] [--count=20]
-backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+backlog-bridge comment <ref> (--text=..|--file=path) [--attach=path ...] [--yes]
+backlog-bridge comment-edit <ref> <commentId> (--text=..|--file=path) [--yes]
+backlog-bridge comment-delete <ref> <commentId> [--yes]   # cannot be undone
+backlog-bridge attachments <ref>
+backlog-bridge attachment-get <ref> <attachmentId> [--out=dir]   # temp folder
+backlog-bridge attachment-delete <ref> <attachmentId> [--yes]   # cannot be undone
 backlog-bridge create <space> <PROJECT> summary=.. [type=<name>] [priority=<name>] [assignee=<name>] [parent=<KEY>] [--file=desc.md] [--yes]
 backlog-bridge update <ref> status=<name> assignee=<name> priority=<name> dueDate=YYYY-MM-DD summary=.. [--yes]
 backlog-bridge delete <ref> [--yes]   # cannot be undone
@@ -215,8 +220,8 @@ Claude Desktop, step by step:
 3. Quit Claude Desktop completely (⌘Q) and open it again — `backlog-bridge` appears among the tools.
 
 Tools: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
-`api_get` (read-only) · `add_comment`, `create_issue`, `update_issue`, `delete_issue` (dry run unless `send: true`) · `list_sync_profiles`,
-`sync_preview` (never writes — real syncs stay in the terminal).
+`api_get`, `list_attachments`, `download_attachment` (read-only) · `add_comment`, `update_comment`, `delete_comment`, `create_issue`, `update_issue`, `delete_issue`, `delete_attachment` (dry run unless `send: true`) · `list_sync_profiles`,
+`sync_preview` (never writes — real syncs stay in the terminal). Full list with parameters: [docs/mcp-tools.md](docs/mcp-tools.md).
 Each tool runs the `backlog-bridge` CLI, so the same guards apply; the server also hands the host the hard rules and the user's
 review mode.
 

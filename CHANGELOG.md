@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.9
+
+- Edit and delete comments: `backlog-bridge comment-edit <ref> <commentId>` / `comment-delete`, and the MCP tools
+  `update_comment` / `delete_comment`. The dry run shows the current comment.
+- Attachments: `--attach=path` (repeatable) on `comment`, `create` and `update` uploads images or files and attaches
+  them; the MCP tools take an `attachments` list of local paths. Files are uploaded only when sending, behind the
+  same secret-file guard as `--file`.
+- `backlog-bridge attachments <ref>`, `attachment-get` (downloads to a temp folder) and `attachment-delete`, plus the
+  MCP tools `list_attachments`, `download_attachment` and `delete_attachment`.
+- `attachment-get` saves into a fresh private temp folder (mkdtemp) unless `--out` is given.
+- `docs/mcp-tools.md` (also in Tiếng Việt and 日本語): every MCP tool with its parameters, linked from the READMEs;
+  a test keeps it in step with the server.
+
 ## 0.1.8
 
 - Create and delete issues: `backlog-bridge create <space> <PROJECT> summary=...` and `backlog-bridge delete <ref>`,
