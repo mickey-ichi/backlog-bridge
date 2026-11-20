@@ -40,7 +40,7 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-Một version cụ thể: `npm install -g backlog-bridge@0.1.8`. Bản `main` chưa release, lấy thẳng từ GitHub:
+Một version cụ thể: `npm install -g backlog-bridge@0.1.9`. Bản `main` chưa release, lấy thẳng từ GitHub:
 `npm install -g --install-links github:mickey-ichi/backlog-bridge` (`--install-links` để npm 10 chép gói vào thay vì
 link tới một bản clone tạm). Ghi chú phát hành: [CHANGELOG.md](CHANGELOG.md).
 
@@ -106,7 +106,12 @@ backlog-bridge issue <ref>                                    # <ref> = URL | <s
 backlog-bridge comments <ref> [--count=20]
 backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|tên] [--open] [--count=50]
 backlog-bridge activities <space> [--project=KEY] [--count=20]
-backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+backlog-bridge comment <ref> (--text=..|--file=path) [--attach=path ...] [--yes]
+backlog-bridge comment-edit <ref> <commentId> (--text=..|--file=path) [--yes]
+backlog-bridge comment-delete <ref> <commentId> [--yes]   # không hoàn tác được
+backlog-bridge attachments <ref>
+backlog-bridge attachment-get <ref> <attachmentId> [--out=dir]   # thư mục tạm
+backlog-bridge attachment-delete <ref> <attachmentId> [--yes]   # không hoàn tác được
 backlog-bridge create <space> <PROJECT> summary=.. [type=<tên>] [priority=<tên>] [assignee=<tên>] [parent=<KEY>] [--file=desc.md] [--yes]
 backlog-bridge update <ref> status=<tên> assignee=<tên> priority=<tên> dueDate=YYYY-MM-DD summary=.. [--yes]
 backlog-bridge delete <ref> [--yes]   # không hoàn tác được
@@ -217,7 +222,7 @@ Claude Desktop, từng bước:
 3. Thoát hẳn Claude Desktop (⌘Q) rồi mở lại — `backlog-bridge` sẽ hiện trong danh sách tool.
 
 Tool: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
-`api_get` (chỉ đọc) · `add_comment`, `create_issue`, `update_issue`, `delete_issue` (chỉ xem trước nếu không có `send: true`) · `list_sync_profiles`,
+`api_get`, `list_attachments`, `download_attachment` (chỉ đọc) · `add_comment`, `update_comment`, `delete_comment`, `create_issue`, `update_issue`, `delete_issue`, `delete_attachment` (chỉ xem trước nếu không có `send: true`) · `list_sync_profiles`,
 `sync_preview` (không bao giờ ghi — sync thật vẫn chạy ở terminal).
 Mỗi tool gọi lại CLI `backlog-bridge` nên giữ nguyên mọi chốt an toàn; server cũng gửi cho agent các quy tắc bắt buộc và chế độ
 duyệt của người dùng.

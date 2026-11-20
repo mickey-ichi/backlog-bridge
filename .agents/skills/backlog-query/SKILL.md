@@ -23,6 +23,8 @@ Issue keys must look like `PROJECT-123`.
 ```bash
 backlog-bridge issue <ref>                             # header + description
 backlog-bridge comments <ref> --count=30               # oldest -> newest
+backlog-bridge attachments <ref>                       # attached files: id, name, size
+backlog-bridge attachment-get <ref> <attachmentId>     # download to a temp folder, prints the path (open it to view)
 backlog-bridge search <space> <PROJECT> --open --assignee=An --keyword=login --count=50
 backlog-bridge search <space> <PROJECT> --assignee=me
 backlog-bridge activities <space> --project=ACME --count=30

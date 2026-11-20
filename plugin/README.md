@@ -12,8 +12,8 @@ Source, CLI and full documentation: https://github.com/mickey-ichi/backlog-bridg
 - **Skills** `backlog-connect`, `backlog-query`, `backlog-write`, `backlog-sync`: how to connect spaces, read
   issues, write safely (preview → approval → send) and preview syncs.
 - **MCP server** (local, stdio): tools `list_spaces`, `home_info`, `create_data_folder`, `get_issue`,
-  `get_comments`, `search_issues`, `list_activities`, `list_projects`, `api_get`, `add_comment`,
-  `create_issue`, `update_issue`, `delete_issue`, `list_sync_profiles`, `sync_preview`.
+  `get_comments`, `search_issues`, `list_activities`, `list_projects`, `api_get`, `list_attachments`, `download_attachment`, `add_comment`, `update_comment`, `delete_comment`,
+  `create_issue`, `update_issue`, `delete_issue`, `delete_attachment`, `list_sync_profiles`, `sync_preview`.
 
 The MCP server runs on your computer, so it works in **Claude Code** and in **Cowork sessions on your computer**.
 Chat in the Claude app ignores local servers — use the Desktop Extension (`.mcpb`) from the GitHub Releases there.
@@ -41,7 +41,7 @@ Chat in the Claude app ignores local servers — use the Desktop Extension (`.mc
   (`$BACKLOG_BRIDGE_HOME` if you set it).
 - **Sends:** HTTPS requests to the Backlog API (`https://<space>/api/v2/...`) of the spaces listed in your `.env`
   only, each with that space's own API key. Nothing else — no telemetry, no third-party services.
-- **Writes:** to Backlog only through `add_comment` / `create_issue` / `update_issue` / `delete_issue`, and only when called with `send: true` after a
+- **Writes:** to Backlog only through the write tools (`add_comment`, `update_comment`, `delete_comment`, `create_issue`, `update_issue`, `delete_issue`, `delete_attachment`), and only when called with `send: true` after a
   preview. Locally, `create_data_folder` creates the data folder and `.env` template and never overwrites a file.
 
 ## Privacy

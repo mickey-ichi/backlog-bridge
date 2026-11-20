@@ -1,11 +1,11 @@
 ---
 name: backlog-write
-description: Create, comment on, update (status, assignee, priority, due date, summary) or delete an issue on any connected Backlog space (internal or customer) via backlog-bridge, always previewing before writing. Use when the user says "create a task", "comment on the customer ticket", "move this task to Resolved", "assign it to X", "change the due date", "delete this issue", "post the translation to Backlog".
+description: Create, comment on (with images/files attached), edit or delete a comment, update (status, assignee, priority, due date, summary), attach or delete files on, or delete an issue on any connected Backlog space (internal or customer) via backlog-bridge, always previewing before writing. Use when the user says "create a task", "comment on the customer ticket", "move this task to Resolved", "assign it to X", "change the due date", "delete this issue", "fix my comment", "delete that comment", "attach this screenshot", "post the translation to Backlog".
 ---
 
 > **Claude plugin:** when the `backlog-bridge` command isn't installed, use this plugin's MCP tools instead —
 > `list_spaces`, `home_info`, `create_data_folder`, `get_issue`, `get_comments`, `search_issues`,
-> `list_activities`, `list_projects`, `api_get`, `add_comment`, `create_issue`, `update_issue`, `delete_issue`, `list_sync_profiles`,
+> `list_activities`, `list_projects`, `api_get`, `list_attachments`, `download_attachment`, `add_comment`, `update_comment`, `delete_comment`, `create_issue`, `update_issue`, `delete_issue`, `delete_attachment`, `list_sync_profiles`,
 > `sync_preview`. The same rules apply: writes return a preview first and are sent (`send: true`) only after the
 > user approves. Real sync runs need the CLI: `npm install -g backlog-bridge`.
 
@@ -66,6 +66,18 @@ backlog-bridge comment internal DEV-42 --text="Fixed, please re-test"
 backlog-bridge create internal DEV summary="[BE] Login API" type=Task priority=High assignee=An dueDate=2026-12-01
 backlog-bridge create internal DEV summary="[FE] Login form" parent=DEV-42 --file=desc.md   # child issue, description from a file
 
+# attach images / files — to a comment, a new issue or an existing one (uploaded only with --yes)
+backlog-bridge comment <ref> --file=reply.txt --attach=screenshot.png --attach=log.txt
+backlog-bridge update <ref> --attach=spec.pdf
+
+# edit / delete a comment — the id is the #number shown by `backlog-bridge comments`; Backlog lets you edit only your own
+backlog-bridge comment-edit <ref> 34642891 --file=reply-fixed.txt
+backlog-bridge comment-delete <ref> 34642891
+
+# attachments of an issue
+backlog-bridge attachments <ref>
+backlog-bridge attachment-delete <ref> 4987699
+
 # update — status/assignee/priority/type by NAME (resolved to ids in the project); other fields go straight to API v2.
 # The default statuses accept English, Japanese or Vietnamese names (In Progress = 処理中 = Đang xử lý);
 # an unknown name lists the project's real ones.
@@ -82,7 +94,7 @@ backlog-bridge api <space> POST /wikis projectId=12345 name="Release note" conte
 
 Append `--yes` to actually send.
 
-`--file` refuses `.env*` files, `state/` directories and the config file (also through symlinks) — secrets are never posted.
+`--file` and `--attach` refuse `.env*` files, `state/` directories and the config file (also through symlinks) — secrets are never posted.
 
 ## Don't
 
@@ -90,4 +102,5 @@ Append `--yes` to actually send.
 - Don't create issues in a customer's space unless the user asked for exactly that; the summary and description follow
   the review mode above.
 - Don't close (`Closed`) a customer's issue — the customer closes it; go up to `Resolved` at most.
-- Don't delete issues or comments unless the user names that exact item; show the dry run and get a clear yes first.
+- Don't delete issues, comments or attachments unless the user names that exact item; show the dry run and get a clear yes first.
+- Don't attach files the user didn't point to.

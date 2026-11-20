@@ -40,7 +40,7 @@ npm install -g backlog-bridge
 backlog-bridge setup
 ```
 
-特定のバージョン：`npm install -g backlog-bridge@0.1.8`。未リリースの `main` を GitHub から：
+特定のバージョン：`npm install -g backlog-bridge@0.1.9`。未リリースの `main` を GitHub から：
 `npm install -g --install-links github:mickey-ichi/backlog-bridge`（`--install-links` は npm 10 が一時クローンへのリンクではなく
 本体をコピーするため）。リリースノート：[CHANGELOG.md](CHANGELOG.md)。
 
@@ -106,7 +106,12 @@ backlog-bridge issue <ref>                                    # <ref> = URL | <s
 backlog-bridge comments <ref> [--count=20]
 backlog-bridge search <space> <PROJECT> [--keyword=..] [--assignee=me|名前] [--open] [--count=50]
 backlog-bridge activities <space> [--project=KEY] [--count=20]
-backlog-bridge comment <ref> (--text=..|--file=path) [--yes]
+backlog-bridge comment <ref> (--text=..|--file=path) [--attach=path ...] [--yes]
+backlog-bridge comment-edit <ref> <commentId> (--text=..|--file=path) [--yes]
+backlog-bridge comment-delete <ref> <commentId> [--yes]   # 元に戻せません
+backlog-bridge attachments <ref>
+backlog-bridge attachment-get <ref> <attachmentId> [--out=dir]   # 一時フォルダ
+backlog-bridge attachment-delete <ref> <attachmentId> [--yes]   # 元に戻せません
 backlog-bridge create <space> <PROJECT> summary=.. [type=<名前>] [priority=<名前>] [assignee=<名前>] [parent=<KEY>] [--file=desc.md] [--yes]
 backlog-bridge update <ref> status=<名前> assignee=<名前> priority=<名前> dueDate=YYYY-MM-DD summary=.. [--yes]
 backlog-bridge delete <ref> [--yes]   # 元に戻せません
@@ -216,7 +221,7 @@ Claude Desktop の手順：
 3. Claude Desktop を完全に終了（⌘Q）して再起動すると、ツール一覧に `backlog-bridge` が表示されます。
 
 ツール：`list_spaces`、`home_info`、`get_issue`、`get_comments`、`search_issues`、`list_activities`、`list_projects`、
-`api_get`（読み取りのみ）・`add_comment`、`create_issue`、`update_issue`、`delete_issue`（`send: true` がない限りプレビューのみ）・`list_sync_profiles`、
+`api_get`、`list_attachments`、`download_attachment`（読み取りのみ）・`add_comment`、`update_comment`、`delete_comment`、`create_issue`、`update_issue`、`delete_issue`、`delete_attachment`（`send: true` がない限りプレビューのみ）・`list_sync_profiles`、
 `sync_preview`（書き込みなし。実際の同期はターミナルで実行）。
 各ツールは `backlog-bridge` CLI を呼び出すため同じ安全策が適用され、サーバーは必須ルールとユーザーのレビューモードもホストに渡します。
 
