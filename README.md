@@ -221,7 +221,7 @@ Claude Desktop, step by step:
 
 Tools: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
 `api_get`, `list_attachments`, `download_attachment` (read-only) · `add_comment`, `update_comment`, `delete_comment`, `create_issue`, `update_issue`, `delete_issue`, `delete_attachment` (dry run unless `send: true`) · `list_sync_profiles`,
-`sync_preview` (never writes — real syncs stay in the terminal).
+`sync_preview` (never writes — real syncs stay in the terminal). Full list with parameters: [docs/mcp-tools.md](docs/mcp-tools.md).
 Each tool runs the `backlog-bridge` CLI, so the same guards apply; the server also hands the host the hard rules and the user's
 review mode.
 

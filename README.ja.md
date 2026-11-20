@@ -222,7 +222,7 @@ Claude Desktop の手順：
 
 ツール：`list_spaces`、`home_info`、`get_issue`、`get_comments`、`search_issues`、`list_activities`、`list_projects`、
 `api_get`、`list_attachments`、`download_attachment`（読み取りのみ）・`add_comment`、`update_comment`、`delete_comment`、`create_issue`、`update_issue`、`delete_issue`、`delete_attachment`（`send: true` がない限りプレビューのみ）・`list_sync_profiles`、
-`sync_preview`（書き込みなし。実際の同期はターミナルで実行）。
+`sync_preview`（書き込みなし。実際の同期はターミナルで実行）。パラメーター付きの一覧：[docs/mcp-tools.ja.md](docs/mcp-tools.ja.md)。
 各ツールは `backlog-bridge` CLI を呼び出すため同じ安全策が適用され、サーバーは必須ルールとユーザーのレビューモードもホストに渡します。
 
 ## お客様への送信内容のレビュー

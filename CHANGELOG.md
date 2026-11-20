@@ -9,6 +9,9 @@
   same secret-file guard as `--file`.
 - `backlog-bridge attachments <ref>`, `attachment-get` (downloads to a temp folder) and `attachment-delete`, plus the
   MCP tools `list_attachments`, `download_attachment` and `delete_attachment`.
+- `attachment-get` saves into a fresh private temp folder (mkdtemp) unless `--out` is given.
+- `docs/mcp-tools.md` (also in Tiếng Việt and 日本語): every MCP tool with its parameters, linked from the READMEs;
+  a test keeps it in step with the server.
 
 ## 0.1.8
 

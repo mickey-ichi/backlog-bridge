@@ -108,6 +108,8 @@ Cách ghi hoạt động:
 - Ghi lên space **của khách** luôn được hỏi lại, theo chế độ duyệt của bạn.
 - Không bao giờ đóng (Closed) issue của khách; chỉ xoá issue khi bạn yêu cầu xoá đúng issue đó.
 
+Danh sách đầy đủ các tool và tham số: [mcp-tools.vi.md](mcp-tools.vi.md).
+
 ## Cập nhật / gỡ
 
 - **Cập nhật:** tải file `.mcpb` mới trên Releases và cài lại — bản cũ được thay thế, thư mục dữ liệu giữ nguyên.

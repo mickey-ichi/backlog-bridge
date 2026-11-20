@@ -563,11 +563,13 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
     const { space, key, rest } = resolveRef(args);
     const id = checkId(rest[0], "attachment id");
     const { name, data } = await client(space).download(`/issues/${key}/attachments/${id}`);
-    const dir = path.resolve(argValue("out") || path.join(os.tmpdir(), "backlog-bridge", `${space}-${key}`));
-    fs.mkdirSync(dir, { recursive: true });
+    // Default: a fresh private folder (mkdtemp, mode 0700) so nobody else on the machine can pre-create the path.
+    const out = argValue("out");
+    const dir = out ? path.resolve(out) : fs.mkdtempSync(path.join(os.tmpdir(), `backlog-bridge-${space}-${key}-`));
+    if (out) fs.mkdirSync(dir, { recursive: true });
     // Only the base name, without path separators or a leading dot, so a crafted name can't escape the folder.
     const file = path.join(dir, path.basename(name).replace(/^\.+/, "_") || `attachment-${id}`);
-    fs.writeFileSync(file, data);
+    fs.writeFileSync(file, data, { flag: out ? "w" : "wx", mode: 0o600 });
     console.log(`Saved ${space} ${key} attachment #${id}: ${file} (${kb(data.length)})`);
   },
 

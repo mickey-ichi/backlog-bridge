@@ -83,6 +83,7 @@ Source, CLI and full documentation: https://github.com/mickey-ichi/backlog-bridg
 - **MCP server** (local, stdio): tools \`list_spaces\`, \`home_info\`, \`create_data_folder\`, \`get_issue\`,
   \`get_comments\`, \`search_issues\`, \`list_activities\`, \`list_projects\`, \`api_get\`, \`list_attachments\`, \`download_attachment\`, \`add_comment\`, \`update_comment\`, \`delete_comment\`,
   \`create_issue\`, \`update_issue\`, \`delete_issue\`, \`delete_attachment\`, \`list_sync_profiles\`, \`sync_preview\`.
+  Parameters and details: [docs/mcp-tools.md](https://github.com/mickey-ichi/backlog-bridge/blob/main/docs/mcp-tools.md).
 
 The MCP server runs on your computer, so it works in **Claude Code** and in **Cowork sessions on your computer**.
 Chat in the Claude app ignores local servers — use the Desktop Extension (\`.mcpb\`) from the GitHub Releases there.

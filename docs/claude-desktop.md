@@ -107,6 +107,8 @@ How writes work:
 - Writing to a **customer's** space is always confirmed with you, in your review mode.
 - A customer's issue is never closed, and an issue is deleted only when you ask to delete that exact issue.
 
+All tools and their parameters: [mcp-tools.md](mcp-tools.md).
+
 ## Update or remove
 
 - **Update:** download the new `.mcpb` from Releases and install it again — it replaces the old version. Your data

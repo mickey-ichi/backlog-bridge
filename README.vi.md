@@ -223,7 +223,7 @@ Claude Desktop, từng bước:
 
 Tool: `list_spaces`, `home_info`, `get_issue`, `get_comments`, `search_issues`, `list_activities`, `list_projects`,
 `api_get`, `list_attachments`, `download_attachment` (chỉ đọc) · `add_comment`, `update_comment`, `delete_comment`, `create_issue`, `update_issue`, `delete_issue`, `delete_attachment` (chỉ xem trước nếu không có `send: true`) · `list_sync_profiles`,
-`sync_preview` (không bao giờ ghi — sync thật vẫn chạy ở terminal).
+`sync_preview` (không bao giờ ghi — sync thật vẫn chạy ở terminal). Danh sách đầy đủ kèm tham số: [docs/mcp-tools.vi.md](docs/mcp-tools.vi.md).
 Mỗi tool gọi lại CLI `backlog-bridge` nên giữ nguyên mọi chốt an toàn; server cũng gửi cho agent các quy tắc bắt buộc và chế độ
 duyệt của người dùng.
 
